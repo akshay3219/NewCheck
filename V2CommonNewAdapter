@@ -1,0 +1,4954 @@
+package com.v1.mazidombivli.v2.adapters;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.pdf.PdfDocument;
+import android.media.AudioManager;
+//import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.ParcelFileDescriptor;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.util.Linkify;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+
+
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubeThumbnailLoader;
+import com.google.android.youtube.player.YouTubeThumbnailView;
+
+//import com.shockwave.pdfium.PdfiumCore;
+import com.v1.mazidombivli.R;
+import com.v1.mazidombivli.util.InternetConnectionStatus;
+import com.v1.mazidombivli.v1Activity.InternetNotConnected;
+import com.v1.mazidombivli.v2.SqlLiteOperations.AddToCartSqlOperations;
+import com.v1.mazidombivli.v2.SqlLiteOperations.FavouriteSqlLiteOperations;
+import com.v1.mazidombivli.v2.SqlLiteOperations.RaiseVoiceSqlLiteOperations;
+import com.v1.mazidombivli.v2.activity.GPSTracker;
+import com.v1.mazidombivli.v2.activity.ShopDetailsActivity;
+import com.v1.mazidombivli.v2.activity.V2CommentsActivity;
+import com.v1.mazidombivli.v2.activity.V2CommonActivity;
+import com.v1.mazidombivli.v2.activity.V2CommonActivityNew;
+import com.v1.mazidombivli.v2.activity.V2ShopPhotosActivity;
+import com.v1.mazidombivli.v2.activity.V3CommonActivityWithTab;
+import com.v1.mazidombivli.v2.activity.V4ShoppingCartActivity;
+import com.v1.mazidombivli.v2.activity.VideoShowActivity;
+import com.v1.mazidombivli.v2.db.V2CommonDbModel;
+import com.v1.mazidombivli.v2.db.V2ItemObject1;
+import com.v1.mazidombivli.v2.util.AsyncTask;
+import com.v1.mazidombivli.v2.util.Config;
+import com.v1.mazidombivli.v2.util.ConstantsMusic;
+import com.v1.mazidombivli.v2.util.MethodSelection;
+import com.v1.mazidombivli.v2.util.MethodType;
+import com.v1.mazidombivli.v2.util.NotificationGannaService;
+import com.v1.mazidombivli.v2.util.NotificationMusicService;
+import com.v1.mazidombivli.v2.util.NotificationMusicServiceNew;
+import com.v1.mazidombivli.v2.util.Response;
+import com.v1.mazidombivli.v2.util.ResponseInterface;
+import com.v1.mazidombivli.v2.util.TextviewHtmlSet;
+import com.v1.mazidombivli.v2.util.UrlEndPoints;
+import com.v1.mazidombivli.v2.util.ViewMoreClass;
+
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+
+import static android.content.Context.TELEPHONY_SERVICE;
+
+/**
+ * Created by akshay on 15/6/17.
+ */
+
+public class V2CommonNewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements ResponseInterface {
+
+    int seek_bar_percentage;
+
+    public static final String NOTIFY_ACTIVITY_ACTION = "notify_activity";
+
+    String TAG = "V2CommonNewAdapter";
+    private final int VIEW_ITEM = 1;
+    private final int VIEW_PROG = 0;
+    LayoutInflater inflater;
+    private ArrayList<V2CommonDbModel> mobjectArrayList;
+    Context context;
+
+    //  storing like count
+    RaiseVoiceSqlLiteOperations raise_ur_voice_db_class;
+
+    //  seekbar time show
+    Thread a;
+    String timing_array[];
+    int timings_count = 0;
+    int is_song_paused = 0;
+
+    //
+    FavouriteSqlLiteOperations favourite_db_class;
+
+    int image_id;
+    V2CommonNewAdapter my_object = this;
+//    MediaPlayer mediaPlayer;
+    boolean flag = false;
+    int length;
+    int font_size;
+
+    V2CommonDbModel common;
+    V2ItemObject1 category;
+    String like_status;
+    ProgressBar pBar;
+
+
+    int bookmark_item_id;
+
+    AlertDialog alertDialog1;
+
+    private V2CommonNewAdapter.OnLoadMoreListener onLoadMoreListener;
+    private LinearLayoutManager mLinearLayoutManager;
+
+    private boolean isMoreLoading = false;
+    private int visibleThreshold = 0;
+    int firstVisibleItem, visibleItemCount, totalItemCount;
+
+    int page = 0;
+
+    ProgressDialog progress_music;
+    PhoneStateListener phoneStateListener;
+
+    int play_id = -1;
+
+//    RecyclerView.ViewHolder holder;
+
+    // To distroy music player//
+
+    Spanned subtitle,description,spanned_title;
+
+    int master_music_flag;
+
+    private Handler mHandler = new Handler();
+
+    int master_position_desc = -1;
+
+    RecyclerView recyclerView;
+
+    int download_persent;
+
+    // for wusic notif
+
+    String play_pause_check;
+
+    BroadcastReceiver broadcastReciver ;
+
+    Double latitude1, longitude1, latitude2, longitude2;
+
+    GPSTracker gps;
+
+    YouTubeThumbnailLoader youTubeThumbnailLoader_check;
+
+    Boolean is_ready_for_loading_youtube_thumbnail=true;
+
+
+    // for add to cart
+
+    int add_position_to_cart;
+
+    DecimalFormat double_number_format;
+
+    AddToCartSqlOperations add_to_cart_sql_operations;
+
+    TextviewHtmlSet textviewHtmlSet;
+
+    int call_number_position=-1,is_from_mobile=0,mediaPlayer_position_send;
+
+    String user_mobile_number;
+
+
+
+    ArrayList<String> category_name_list = new ArrayList<String>();
+
+    ArrayList<String> song_title_list = new ArrayList<String>();
+
+    HashSet<String> set_of_audio_files;
+
+    HashSet<String> set_of_audio_files_title;
+
+    public static final String NOTIFY_ACTIVITY_ACTION2 = "notify_activity2";
+
+
+    public void destroyMusicPlayer() {
+
+
+        try {
+
+            if (a != null) {
+
+                a.interrupt();
+                a = null;
+            }
+
+//            if (mediaPlayer != null) {
+//
+//                if (mediaPlayer.isPlaying()) {
+//                    mediaPlayer.stop();
+//
+//
+//                    mediaPlayer_position_send = mediaPlayer.getCurrentPosition();
+//
+//
+//                    // for music widget notif
+//                    Log.e("media player stopped", "player stoped");
+////                    startService("player stoped");
+////                    unregisterReceiver();
+//
+//                }
+//
+//                mediaPlayer.release();
+//                mediaPlayer = null;
+//
+//                // for music widget notif
+////                startService("player stoped");
+////                unregisterReceiver();
+//                Log.e("media player stopped2", "player stoped2");
+//            }
+
+        } catch (Exception e) {
+
+            Log.e(TAG, "mediaPlayer" + e.getMessage());
+        }
+
+
+
+    }
+
+
+    // for music widget notif
+    private void unregisterReceiver() {
+
+        Log.e("checkbroadcastReciver",""+broadcastReciver);
+
+        context.unregisterReceiver(broadcastReciver);
+
+    }
+
+
+
+    public V2CommonNewAdapter(final Context context, V2ItemObject1 category, V2CommonNewAdapter.OnLoadMoreListener onLoadMoreListener, final RecyclerView recyclerView) {
+
+        this.mobjectArrayList = new ArrayList<V2CommonDbModel>();
+        this.context = context;
+        raise_ur_voice_db_class = new RaiseVoiceSqlLiteOperations(context);
+        raise_ur_voice_db_class.open();
+        favourite_db_class = new FavouriteSqlLiteOperations(context);
+        favourite_db_class.open();
+
+
+        add_to_cart_sql_operations = new AddToCartSqlOperations(context);
+        add_to_cart_sql_operations.open();
+
+        double_number_format = new DecimalFormat();
+        double_number_format.setDecimalSeparatorAlwaysShown(false);
+
+
+        this.recyclerView = recyclerView;
+        this.category = category;
+//        mediaPlayer = new MediaPlayer();
+        this.onLoadMoreListener = onLoadMoreListener;
+        this.inflater = LayoutInflater.from(context);
+        this.progress_music = new ProgressDialog(context);
+
+
+
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
+        textviewHtmlSet = new TextviewHtmlSet();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        user_mobile_number = sharedPref.getString("mobile", "");
+
+
+        // for music widget notif
+
+        set_of_audio_files=new HashSet<String>();
+
+        set_of_audio_files_title=new HashSet<String>();
+
+
+
+
+//        LoadNativeAd();
+
+        // for music widget notif
+        broadcastReciver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                if (intent.getAction().equals(NOTIFY_ACTIVITY_ACTION2 ))
+
+                {
+
+                    try {
+                        if( intent.getIntExtra("play_pause_index", 0) < mobjectArrayList.size() ) {
+
+//                            Log.e("_playing adapter",""+intent.getStringExtra("song_playing"));
+
+                            if (intent.getStringExtra("song_playing").equals(mobjectArrayList.get(intent.getIntExtra("play_pause_index", 0)).getCommon_title())) {
+
+                                if (intent.getStringExtra("play_pause").equals("0")) {
+
+                                    mobjectArrayList.get(intent.getIntExtra("play_pause_index", 0)).setIs_play(1);
+
+                                    mobjectArrayList.get(intent.getIntExtra("play_pause_index", 0)).setIs_pause(0);
+
+                                    notifyDataSetChanged();
+
+
+                                } else if (intent.getStringExtra("play_pause").equals("1")) {
+
+                                    mobjectArrayList.get(intent.getIntExtra("play_pause_index", 0)).setIs_play(1);
+
+                                    mobjectArrayList.get(intent.getIntExtra("play_pause_index", 0)).setIs_pause(1);
+
+                                    notifyDataSetChanged();
+
+
+                                } else if (intent.getStringExtra("play_pause").equals("check_arraylist_size")) {
+
+                                    Log.e("check play_song_index", "" + intent.getIntExtra("play_song_index", 0));
+
+                                    startService("check service", intent.getIntExtra("play_song_index", 0));
+
+
+                                } else if (intent.getStringExtra("play_pause").equals("only_one_song")) {
+
+                                    play_id = -1;
+
+                                    notifyDataSetChanged();
+
+                                }
+
+
+                            } else if (intent.getStringExtra("song_playing").equals("close_music")) {
+
+                                mobjectArrayList.get(play_id).setIs_play(0);
+
+                                if( progress_music.isShowing()) {
+
+                                    progress_music.dismiss();
+                                }
+
+                                notifyDataSetChanged();
+
+                            } else if (intent.getStringExtra("song_playing").equals("dismiss_progress")) {
+
+                                if( progress_music.isShowing()) {
+
+                                    progress_music.dismiss();
+                                }
+
+
+
+
+                            }
+                        }
+
+
+                    }catch (Exception e){
+
+                        Log.e("excp in  music common",""+e.getMessage());
+                    }
+
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter( NOTIFY_ACTIVITY_ACTION2 );
+        context.registerReceiver(broadcastReciver, filter);
+
+
+
+//        context.unregisterReceiver(broadcastReciver);
+
+
+
+
+
+
+        phoneStateListener = new PhoneStateListener() {
+            @Override
+            public void onCallStateChanged(int state, String incomingNumber) {
+
+                try {
+
+                    if (state == TelephonyManager.CALL_STATE_RINGING) {
+//
+//                        if (mediaPlayer.isPlaying())
+//                            mediaPlayer.pause();
+
+
+                        //Incoming call: Pause music
+                    } else if (state == TelephonyManager.CALL_STATE_IDLE) {
+
+//                        if (master_music_flag == 1) {
+//                            mediaPlayer.start();
+//                        }
+                        //Not in call: Play music
+                    } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
+
+//                        if (mediaPlayer.isPlaying())
+//                            mediaPlayer.pause();
+
+                        //A call is dialing, active or on hold
+                    }
+                    super.onCallStateChanged(state, incomingNumber);
+
+
+
+
+                } catch (Exception e) {
+                    Log.e("check", "" + e.getMessage());
+                }
+            }
+        };
+
+
+        TelephonyManager mgr = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+        if (mgr != null) {
+            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
+
+
+
+
+//        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//
+//            @Override
+//            public void onCompletion(MediaPlayer mp) {
+//
+//                try {
+//
+//
+//                    Log.e("song complete", "song completed");
+//
+//                    if (mediaPlayer != null ) {
+//
+//                        mLinearLayoutManager.setSmoothScrollbarEnabled(true);
+//
+//                        recyclerView.smoothScrollToPosition(play_id + 1);
+//
+//                        startNextMusic();
+//
+//                    }
+//
+//                }catch (Exception e){
+//
+//                    Log.e("ExcpOncompletionMusic",""+e.getMessage());
+//                }
+//
+//            }
+//
+//        });
+//
+//
+//        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//
+//            @Override
+//            public void onPrepared(MediaPlayer mp) {
+//
+//                try {
+//
+//                    progress_music.dismiss();
+//                    mp.start();
+//
+////                ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.VISIBLE);
+////                ((MyViewHolder) holder).seek_bar.setMax(100);
+////                ((MyViewHolder) holder).seek_bar.setProgress(0);
+//
+//                    int end_time_minute = (mediaPlayer.getDuration() / 1000) / 60;
+//                    int end_time_seconds = (mediaPlayer.getDuration() / 1000) % 60;
+//                    String end_time = end_time_minute + " : " + end_time_seconds;
+//
+//                    if (play_id < mobjectArrayList.size()) {
+//
+//
+//                        mobjectArrayList.get(play_id).setEnd_time(end_time);
+//                    }
+//
+//
+////                ((MyViewHolder) holder).mp_end_time.setText(end_time);
+//
+//                    v2getSeekBarStatus(play_id);
+//
+//                }catch (Exception e){
+//
+//                    Log.e("on prepared",""+e.getMessage());
+//                }
+//
+//
+//            }
+//        });
+//
+//
+//        // for buffering
+//
+//        mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+//            @Override
+//            public void onBufferingUpdate(MediaPlayer mp, int percent) {
+//
+//                try {
+//
+//                    download_persent = percent;
+//
+//                    int calculate_per = 0;
+//
+//                    if( mediaPlayer.isPlaying() ) {
+//
+//                        if (mediaPlayer.getDuration() != 0) {
+//
+//                            calculate_per = (100 * seek_bar_percentage) / mediaPlayer.getDuration();
+//
+//                        }
+//
+//                    }
+////                    Log.e("percent", "" + download_persent);
+////
+////                    Log.e("calculate_per", "" + calculate_per);
+////
+////                    Log.e("current position", "" + mediaPlayer.getCurrentPosition());
+////
+////                    Log.e("seek_bar_percentage", "" + seek_bar_percentage);
+////
+////                    Log.e("duration", "" + mediaPlayer.getDuration());
+//
+//
+//                    if (download_persent >= calculate_per) {
+//
+//                        progress_music.dismiss();
+//
+//                    } else {
+//
+//                        progress_music.setCancelable(true);
+//                        progress_music.setMessage("Please wait till loading");
+//                        progress_music.setIndeterminate(true);
+//                        progress_music.show();
+//
+//
+//                    }
+//
+//                } catch (Exception e) {
+//                    Log.e("check", e.getMessage());
+//                }
+//            }
+//        });
+    }
+
+
+
+
+    public void startNextMusic()  {
+
+        try {
+
+
+            mobjectArrayList.get(play_id).setIs_play(0);
+            mobjectArrayList.get(play_id).setIs_pause(0);
+            mobjectArrayList.get(play_id).setCurrent_position(0);
+            mobjectArrayList.get(play_id).setStart_time("00 : 00");
+
+
+            play_id = play_id + 1;
+
+            if( play_id >= mobjectArrayList.size() ){
+
+//                Log.e("single1","completed1");
+
+
+//            music statusbar notif
+//                startService("song completed");
+
+//                Log.e("single2","completed2");
+
+                notifyDataSetChanged();
+                return;
+            }
+
+            while (  true ) {
+
+                if( play_id >= mobjectArrayList.size() ){
+
+                    Log.e("single2","completed2");
+
+                    //            music statusbar notif
+//                    startService("song completed");
+
+                    notifyDataSetChanged();
+                    return;
+                }
+
+
+                V2CommonDbModel common = mobjectArrayList.get(play_id);
+
+                if (common != null) {
+
+                    if ( common.getAudio_file() != null ) {
+
+                        try {
+
+                            if (mobjectArrayList.size() > 0) {
+
+                                for (int i = 0; i < mobjectArrayList.size(); i++) {
+
+                                    V2CommonDbModel db = mobjectArrayList.get(i);
+
+                                    if (i != play_id) {
+
+                                        is_song_paused=0;
+                                        db.setIs_play(0);
+                                        db.setIs_pause(0);
+//                                        startService("next music !");
+                                    } else {
+
+                                        progress_music.setCancelable(true);
+                                        progress_music.setMessage("Please wait till loading");
+                                        progress_music.setIndeterminate(true);
+                                        progress_music.show();
+
+//                                        mediaPlayer.reset();
+//                                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                                        mediaPlayer.setDataSource(db.getAudio_file());
+//                                        mediaPlayer.prepareAsync();
+//
+
+                                        // for highlight
+//                                        if (  db.getHighlighted_timings() != null) {
+//
+//                                            timings_count = 0;
+//                                            timing_array = mobjectArrayList.get(i).getHighlighted_timings().split(",");
+//                                        }
+
+                                        db.setIs_play(1);
+                                        db.setIs_pause(0);
+//                                        startService("next music ");
+                                    }
+
+                                    mobjectArrayList.set(i, db);
+                                }
+
+
+                                Log.e("here", "here");
+                                break;
+                            }
+                        } catch (Exception e) {
+
+                            Log.e("audio excp", e.getMessage());
+                        }
+                    } else {
+
+                        play_id = play_id + 1;
+                    }
+                } else {
+
+                    mobjectArrayList.get(play_id - 1).setIs_play(0);
+                    break;
+                }
+            }
+
+            notifyDataSetChanged();
+
+
+
+        }catch (Exception e){
+
+            Log.e("check music next",e.getMessage());
+        }
+
+    }
+
+    // for previous music
+
+    public void startPreviousMusic()  {
+
+        try {
+
+            mobjectArrayList.get(play_id).setIs_play(0);
+            mobjectArrayList.get(play_id).setIs_pause(0);
+            mobjectArrayList.get(play_id).setCurrent_position(0);
+            mobjectArrayList.get(play_id).setStart_time("00 : 00");
+
+
+            play_id = play_id - 1;
+
+            if( play_id >= mobjectArrayList.size() ){
+
+                notifyDataSetChanged();
+                return;
+            }
+
+            while (  true ) {
+
+                if( play_id >= mobjectArrayList.size() ){
+
+                    notifyDataSetChanged();
+                    return;
+                }
+
+
+                V2CommonDbModel common = mobjectArrayList.get(play_id);
+
+                if (common != null) {
+
+                    if ( common.getAudio_file() != null ) {
+
+                        try {
+
+                            if (mobjectArrayList.size() > 0) {
+
+                                for (int i = 0; i < mobjectArrayList.size(); i++) {
+
+                                    V2CommonDbModel db = mobjectArrayList.get(i);
+
+                                    if (i != play_id) {
+
+                                        is_song_paused=0;
+                                        db.setIs_play(0);
+                                        db.setIs_pause(0);
+//                                        startService("previous !");
+                                    } else {
+
+                                        progress_music.setCancelable(true);
+                                        progress_music.setMessage("Please wait till loading");
+                                        progress_music.setIndeterminate(true);
+                                        progress_music.show();
+
+//                                        mediaPlayer.reset();
+//                                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                                        mediaPlayer.setDataSource(db.getAudio_file());
+//                                        mediaPlayer.prepareAsync();
+
+
+//                                        if (  db.getHighlighted_timings() != null) {
+//
+//                                            timings_count = 0;
+//                                            timing_array = mobjectArrayList.get(i).getHighlighted_timings().split(",");
+//                                        }
+
+                                        db.setIs_play(1);
+                                        db.setIs_pause(0);
+//                                        startService("previous");
+                                    }
+
+                                    mobjectArrayList.set(i, db);
+                                }
+
+
+                                Log.e("here", "here");
+                                break;
+                            }
+                        } catch (Exception e) {
+
+                            Log.e("audio excp", e.getMessage());
+                        }
+                    } else {
+
+                        play_id = play_id - 1;
+                    }
+                } else {
+
+                    mobjectArrayList.get(play_id + 1).setIs_play(0);
+                    break;
+                }
+            }
+
+            notifyDataSetChanged();
+
+
+
+        }catch (Exception e){
+
+            Log.e("check music prev",e.getMessage());
+        }
+
+    }
+
+
+
+
+
+    public void setDataToAddBookmark(Response response){
+
+        try {
+
+            if ( response != null ) {
+
+                if ( response.getIs_success() ) {
+
+                    Log.e("here","here");
+                    alertDialog1.cancel();
+                    favourite_db_class.insert(bookmark_item_id, 1);
+
+                    JSONObject my_response = new JSONObject(response.getData());
+                    Log.e("api response",my_response.toString());
+                    String message = my_response.getString("message");
+//                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+
+                } else {
+
+//                    favourite_db_class.insert(bookmark_item_id, 1);
+                    Log.e("here2","here2");
+                    JSONObject jsonobject = new JSONObject(response.getData());
+                    Log.e("message",jsonobject.toString());
+                    String message = jsonobject.getString("message");
+//                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+                }
+
+            } else {
+
+                Log.e(TAG ,"Null response");
+            }
+
+        }catch (Exception e) {
+
+            Log.e( TAG , e.getMessage() );
+        }
+
+    }
+
+
+    public void setDataToAddOrderCreate(Response response){
+
+        try {
+
+            if ( response != null ) {
+
+                if ( response.getIs_success() ) {
+
+                    Log.e("here","here");
+
+                    JSONObject my_response = new JSONObject(response.getData());
+                    Log.e("api response",""+my_response.toString());
+                    String message = my_response.getString("message");
+
+//                    JSONObject new_json = my_response.getJSONObject("result");
+
+                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+                    add_to_cart_sql_operations.insert(mobjectArrayList.get(add_position_to_cart).getCommon_id(), 1);
+
+
+                    // retrive count from sqllite and set to below function
+
+                    Log.e("v3 function",""+category.getV3_function());
+
+                    if(category.getFunction()==1){
+
+                        ((V3CommonActivityWithTab)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+
+                    }else if(category.getFunction()==10){
+
+
+                        ((V2ShopPhotosActivity)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+
+                    }else{
+
+                        ((V2CommonActivityNew)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+                    }
+
+                    notifyItemChanged(add_position_to_cart);
+
+//                    mobjectArrayList.get(add_position_to_cart).setIs_added_to_cart(1);
+
+//                    notifyDataSetChanged();
+
+//                    ((MyViewHolder))
+
+//                  String  link = UrlEndPoints.DEEP_LINK_URL + new_json.get;
+//                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//                    shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    shareIntent.setType("text/plain");
+//                    shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, ""+ " " +" " +new_json.getString("id") );
+//                    context.startActivity(shareIntent);
+
+
+                } else {
+
+                    JSONObject jsonobject = new JSONObject(response.getData());
+                    Log.e("message",jsonobject.toString());
+                    String message = jsonobject.getString("message");
+                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+                }
+
+            } else {
+
+                Log.e(TAG ,"Null response");
+            }
+
+        }catch (Exception e) {
+
+            Log.e( TAG , e.getMessage() );
+        }
+
+    }
+
+
+    public void setDataToItemSharable(Response response){
+
+        try {
+
+            if ( response != null ) {
+
+                if ( response.getIs_success() ) {
+
+                    Log.e("here","here");
+
+
+                    JSONObject my_response = new JSONObject(response.getData());
+                    Log.e("api response",""+my_response.toString());
+                    String message = my_response.getString("message");
+
+                    JSONObject new_json = my_response.getJSONObject("result");
+
+//                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+
+//                  String  link = UrlEndPoints.DEEP_LINK_URL + new_json.get;
+
+
+                    // new code
+//                    Intent sendIntent = new Intent(Intent.ACTION_VIEW);
+//                    sendIntent.setAction(Intent.ACTION_SEND);
+//                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Address :");
+////                    Drawable mDrawable = holder.imageView.getDrawable();
+////                    Bitmap mBitmap = ((BitmapDrawable) mDrawable).getBitmap();
+////
+////                    String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), mBitmap, "Image Description", null);
+////
+//                    Uri uri = Uri.parse("https://s3-ap-southeast-1.amazonaws.com/mazidombivli/18_09_18_10_03_12am_1537264987734.jpg");
+//                    sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
+//                    sendIntent.setType("image/*");
+//                    context.startActivity(sendIntent);
+
+                    // new code end
+
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, ""+ " " +" " +new_json.getString("id") );
+                    context.startActivity(shareIntent);
+
+
+                } else {
+
+                    JSONObject jsonobject = new JSONObject(response.getData());
+                    Log.e("message",jsonobject.toString());
+                    String message = jsonobject.getString("message");
+                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+                }
+
+            } else {
+
+                Log.e(TAG ,"Null response");
+            }
+
+        }catch (Exception e) {
+
+            Log.e( TAG , e.getMessage() );
+        }
+
+    }
+
+    public void setDataToCreateCallToShop(Response response) {
+
+        try {
+
+            if (response != null) {
+
+                if (response.getIs_success()) {
+
+                    Log.e("here", "here");
+
+
+                    JSONObject my_response = new JSONObject(response.getData());
+                    Log.e("api response", "" + my_response.toString());
+                    String message = my_response.getString("message");
+//
+//                    JSONObject new_json = my_response.getJSONObject("result");
+//
+//                    Toast.makeText(context,message, Toast.LENGTH_SHORT).show();
+
+                    if(is_from_mobile==1){
+
+                        is_from_mobile=0;
+
+                        Intent call = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mobjectArrayList.get(call_number_position).getCommon_mobile()));
+                        context.startActivity(call);
+
+                    }else {
+
+                        Intent call = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mobjectArrayList.get(call_number_position).getCommon_alternate_mobile()));
+                        context.startActivity(call);
+                    }
+//
+//
+////                  String  link = UrlEndPoints.DEEP_LINK_URL + new_json.get;
+//                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//                    shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    shareIntent.setType("text/plain");
+//                    shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, "" + " " + " " + new_json.getString("id"));
+//                    context.startActivity(shareIntent);
+
+
+                } else {
+
+                    JSONObject jsonobject = new JSONObject(response.getData());
+                    Log.e("message", jsonobject.toString());
+                    String message = jsonobject.getString("message");
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+
+                }
+
+            } else {
+
+                Log.e(TAG, "Null response");
+            }
+
+        } catch (Exception e) {
+
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+
+
+    @Override
+    public void getResponse(Response response, MethodSelection interface_method) {
+
+        try {
+
+            switch ( interface_method ) {
+
+                case ADD_BOOKMARK :
+                    this.setDataToAddBookmark(response);
+                    break;
+
+
+                case COMMON_ITEM_SHARABLE :
+                    this.setDataToItemSharable(response);
+                    break;
+
+
+                case ADD_ORDER_CREATE :
+                    this.setDataToAddOrderCreate(response);
+                    break;
+
+                case CREATE_CALL_TO_SHOP :
+                    this.setDataToCreateCallToShop(response);
+                    break;
+
+//
+//                case SERVER_SEARCH:
+//                    this.setDataToServerSearch(response);
+//                    break;
+            }
+
+        }catch (Exception e) {
+
+            Log.e(TAG ,"PostResponse"+e.getMessage() );
+        }
+
+
+
+
+    }
+
+    public void setListNull() {
+
+        this.page = 0;
+
+        mLinearLayoutManager.scrollToPosition(0);
+
+        this.mobjectArrayList.clear();
+
+    }
+
+
+    public interface OnLoadMoreListener {
+        void onLoadMore(int page);
+
+    }
+
+
+    public void setLinearLayoutManager(LinearLayoutManager linearLayoutManager) {
+        this.mLinearLayoutManager = linearLayoutManager;
+
+
+
+    }
+
+
+
+
+    public void setRecyclerView(RecyclerView mView) {
+
+        mView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                visibleItemCount = recyclerView.getChildCount();
+                totalItemCount = mLinearLayoutManager.getItemCount();
+                firstVisibleItem = mLinearLayoutManager.findFirstVisibleItemPosition();
+
+
+                if (!isMoreLoading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
+
+                    page = page + 1;
+                    isMoreLoading = true;
+                    setProgressMore(true);
+                    onLoadMoreListener.onLoadMore(page);
+                }
+            }
+
+        });
+    }
+
+
+    @Override
+    public int getItemViewType(int position) {
+
+        return mobjectArrayList.get(position) != null ? VIEW_ITEM : VIEW_PROG;
+
+    }
+
+
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+
+        if (viewType == VIEW_ITEM) {
+            return new V2CommonNewAdapter.MyViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.v2_common_new_list, parent, false));
+        } else {
+            Log.e("progressbar", "here is progressbar");
+            return new V2CommonNewAdapter.ProgressViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_progress, parent, false));
+        }
+
+
+    }
+
+
+    public void addItemMore(List<V2CommonDbModel> lst) {
+        setProgressMore(false);
+        mobjectArrayList.addAll(lst);
+        notifyItemRangeChanged(0, mobjectArrayList.size());
+        Log.e("objectArrayList.size()", String.valueOf(mobjectArrayList.size()));
+
+
+    }
+
+    @Override
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+
+        if (holder instanceof V2CommonNewAdapter.MyViewHolder) {
+
+            common = mobjectArrayList.get(position);
+            image_id = common.getCommon_id();
+
+            // for hash set
+
+            if( common.getAudio_file() !=null ) {
+
+
+                set_of_audio_files.add(common.getAudio_file());
+
+
+                for (String aSet : set_of_audio_files) {
+
+                    if (!category_name_list.contains(aSet)) {
+
+                        category_name_list.add(aSet);
+//                        Collections.reverse(category_name_list);
+
+                    }
+                }
+
+
+
+            }
+
+            if(common.getCommon_title() !=null){
+
+
+//                Log.e("check common title",""+mobjectArrayList.get(position).getCommon_title());
+
+                set_of_audio_files_title.add(common.getCommon_title());
+
+                for (String bSet : set_of_audio_files_title){
+
+                    if (!song_title_list.contains(bSet)) {
+
+                        song_title_list.add(bSet);
+//                        Collections.reverse(song_title_list);
+
+                    }
+
+
+                }
+
+            }
+
+
+//            View More
+            if ( mobjectArrayList.get(position).getCommon_view_more() == 1) {
+
+                ((MyViewHolder) holder).tv_common_view_more.setVisibility(View.VISIBLE);
+
+                if ((mobjectArrayList.get(position).getView_more_text() != null)) {
+                    ((MyViewHolder) holder).tv_common_view_more.setText(mobjectArrayList.get(position).getView_more_text());
+                }
+
+                ((MyViewHolder) holder).tv_common_view_more.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        Log.e("on click","on view more");
+
+//                        Log.e("website",""+mobjectArrayList.get(position).getCommon_website());
+//                        Log.e("mobile",""+mobjectArrayList.get(position).getCommon_alternate_mobile());
+//                        Log.e("redirect_id",""+mobjectArrayList.get(position).getCommon_redirect_category_id());
+
+
+                        V2ItemObject1 category_item = new V2ItemObject1();
+
+                        if ( mobjectArrayList.get(position).getCommon_redirect_category_id() != -1 &&  mobjectArrayList.get(position).getCommon_redirect_category_id() != 0 ) {
+
+//                            Log.e("a","a");
+                            category_item.setCategory_id(Integer.parseInt("" + mobjectArrayList.get(position).getCommon_redirect_category_id()));
+
+
+
+                            Intent intent2 = new Intent(context, ShopDetailsActivity.class)
+                                    .putExtra("category_data", category_item);
+
+                            context.startActivity(intent2);
+
+                        }  else if( mobjectArrayList.get(position).getV3_redirect_category_id() !=-1 && mobjectArrayList.get(position).getV3_redirect_category_id() !=0 ){
+
+
+
+                            ViewMoreClass check_temp = new ViewMoreClass();
+
+
+                            check_temp.view_more(Integer.parseInt("" + mobjectArrayList.get(position).getV3_redirect_category_id()),context);
+
+
+
+                        } else if ( mobjectArrayList.get(position).getCommon_website() != null ) {
+
+                            try {
+
+//                                if( mobjectArrayList.get(position).getIs_webview() ==1) {
+
+
+                                if ( !InternetConnectionStatus.checkState(context) ) {
+
+                                    Intent i = new Intent(context, InternetNotConnected.class);
+                                    context.startActivity(i);
+
+                                } else {
+
+                                    Log.e("website","website");
+
+
+                                    String check_pdf = ".pdf";
+
+                                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                                    CustomTabsIntent customTabsIntent = builder.build();
+                                    builder.setToolbarColor(context.getResources().getColor(R.color.colorPrimary));
+
+                                    builder.setStartAnimations(context, android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                                    builder.setExitAnimations(context, android.R.anim.slide_in_left,
+                                            android.R.anim.slide_out_right);
+                                    if (mobjectArrayList.get(position).getCommon_website().toLowerCase().contains(check_pdf.toLowerCase())) {
+
+
+//                                        Intent intent2 = new Intent(context, WebViewActivity.class)
+//                                                .putExtra("news_url", mobjectArrayList.get(position).getCommon_website())
+//                                                .putExtra("news_name", mobjectArrayList.get(position).getCommon_title());
+//
+//                                        context.startActivity(intent2);
+
+                                        customTabsIntent.launchUrl(context, Uri.parse(mobjectArrayList.get(position).getCommon_website()));
+
+
+                                    } else {
+
+                                        if(category.getFunction()==1){
+
+
+                                            CustomTabActivityHelper.openCustomTab(((V3CommonActivityWithTab) context), customTabsIntent, Uri.parse(mobjectArrayList.get(position).getCommon_website()),
+
+                                                    new CustomTabActivityHelper.CustomTabFallback() {
+                                                        @Override
+                                                        public void openUri(Activity activity, Uri uri) {
+
+                                                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                                            activity.startActivity(intent);
+                                                        }
+                                                    });
+
+                                        }else if(category.getFunction()==10) {
+
+                                            CustomTabActivityHelper.openCustomTab(((V2ShopPhotosActivity) context), customTabsIntent, Uri.parse(mobjectArrayList.get(position).getCommon_website()),
+
+                                                    new CustomTabActivityHelper.CustomTabFallback() {
+                                                        @Override
+                                                        public void openUri(Activity activity, Uri uri) {
+
+                                                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                                            activity.startActivity(intent);
+                                                        }
+                                                    });
+
+
+                                        }else{
+
+                                            CustomTabActivityHelper.openCustomTab(((V2CommonActivityNew) context), customTabsIntent, Uri.parse(mobjectArrayList.get(position).getCommon_website()),
+
+                                                    new CustomTabActivityHelper.CustomTabFallback() {
+                                                        @Override
+                                                        public void openUri(Activity activity, Uri uri) {
+
+                                                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                                            activity.startActivity(intent);
+                                                        }
+                                                    });
+
+
+                                        }
+
+
+
+                                    }
+
+                                }
+
+//                                } else {
+//
+//                                    try {
+//
+//                                        Uri uri = Uri.parse( mobjectArrayList.get(position).getCommon_website()); // missing 'http://' will cause crashed
+//                                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+//                                        context.startActivity(intent);
+//                                    }catch (Exception e){
+//
+//                                        Log.e("check",""+e.getMessage());
+//                                    }
+//
+//                                }
+
+                            } catch (Exception e) {
+
+                                Log.e("website excp",""+e.getMessage());
+
+//                                if ( mobjectArrayList.get(position).getCommon_alternate_mobile() != null  )
+//                                {
+//
+//                                    try {
+//
+//                                        DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                                        Date my_date1 = new Date();
+//                                        String date_string1 = dateFormat1.format(my_date1);
+//
+//                                        JSONObject jsonobject = new JSONObject();
+//                                        jsonobject .put("category_id", "" + mobjectArrayList.get(position).getCommon_category_id());
+//                                        jsonobject.put("shop_id", mobjectArrayList.get(position).getCommon_provider_id());
+//                                        jsonobject.put("shop_name", mobjectArrayList.get(position).getCommon_title());
+//                                        jsonobject.put("shop_mobile", mobjectArrayList.get(position).getCommon_alternate_mobile());
+//                                        jsonobject.put("user_mobile",user_mobile_number );
+//                                        jsonobject.put("date", date_string1);
+//
+//                                        String string_object = jsonobject.toString();
+//
+//                                        Log.e("check that",""+string_object);
+//
+//                                        AsyncTask my_task = new AsyncTask(
+//                                                context,
+//                                                MethodType.POST,
+//                                                UrlEndPoints.CREATE_CALL_TO_SHOP,
+//                                                string_object,
+//                                                my_object,
+//                                                MethodSelection.CREATE_CALL_TO_SHOP
+//                                        );
+//
+//                                        my_task.setIs_loader(false);
+//
+//                                        my_task.execute();
+//
+//                                    } catch (Exception k){
+//
+//                                        Log.e("excp v2 common adap",""+k.getMessage());
+//                                    }
+
+
+//                                    Log.e("check alt_mobile",""+mobjectArrayList.get(position).getCommon_alternate_mobile());
+
+                                Intent call = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mobjectArrayList.get(position).getCommon_alternate_mobile()));
+                                context.startActivity(call);
+//                                }
+                            }
+
+                        } else if ( mobjectArrayList.get(position).getCommon_alternate_mobile() != null  ) {
+
+
+//                            Log.e("check alt_mobile",""+mobjectArrayList.get(position).getCommon_alternate_mobile());
+
+//                            Intent call = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mobjectArrayList.get(position).getCommon_alternate_mobile()));
+//                            context.startActivity(call);
+
+                            try {
+
+                                DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                Date my_date1 = new Date();
+                                String date_string1 = dateFormat1.format(my_date1);
+
+                                JSONObject jsonobject = new JSONObject();
+                                jsonobject .put("category_id", "" + mobjectArrayList.get(position).getCommon_category_id());
+                                jsonobject.put("shop_id", mobjectArrayList.get(position).getCommon_provider_id());
+                                jsonobject.put("shop_name", mobjectArrayList.get(position).getCommon_title());
+                                jsonobject.put("shop_mobile", mobjectArrayList.get(position).getCommon_alternate_mobile());
+                                jsonobject.put("user_mobile",user_mobile_number );
+                                jsonobject.put("date", date_string1);
+
+                                String string_object = jsonobject.toString();
+
+                                Log.e("check that",""+string_object);
+
+                                AsyncTask my_task = new AsyncTask(
+                                        context,
+                                        MethodType.POST,
+                                        UrlEndPoints.CREATE_CALL_TO_SHOP,
+                                        string_object,
+                                        my_object,
+                                        MethodSelection.CREATE_CALL_TO_SHOP
+                                );
+
+                                my_task.setIs_loader(false);
+
+                                my_task.execute();
+
+                            } catch (Exception e){
+
+                                Log.e("excp v2 common adap",""+e.getMessage());
+                            }
+
+
+
+
+                        }
+
+                    }
+                });
+            } else {
+
+                ((MyViewHolder) holder).tv_common_view_more.setVisibility(View.GONE);
+            }
+
+
+
+
+            // for direction lat lng
+
+//            Log.e("check mobjectArrayList",""+ mobjectArrayList.get(position).getShow_map_icon());
+//            Log.e("check mobjectArrayList",""+ mobjectArrayList.get(position).getCommon_lat());
+
+            if (mobjectArrayList.get(position).getShow_map_icon() ==1 && mobjectArrayList.get(position).getCommon_lat() !=null && mobjectArrayList.get(position).getCommon_lng() !=null) {
+
+
+                latitude1 = mobjectArrayList.get(position).getCommon_lat();
+                longitude1 = mobjectArrayList.get(position).getCommon_lng();
+
+                if (latitude1 !=0.0 && longitude1 !=0.0 ) {
+
+                    ((MyViewHolder) holder).ll_img_direction.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).img_direction.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).tv_get_direction.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).tv_get_direction.setPaintFlags( ((MyViewHolder) holder).tv_get_direction.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+                    Glide.with(context).load("").error(R.drawable.get_direction).into(((MyViewHolder) holder).img_direction);
+
+
+                } else {
+
+                    ((MyViewHolder) holder).tv_get_direction.setVisibility(View.GONE);
+                    ((MyViewHolder) holder).img_direction.setVisibility(View.GONE);
+
+                    ((MyViewHolder) holder).ll_img_direction.setVisibility(View.GONE);
+
+                }
+
+
+                ((MyViewHolder) holder).tv_get_direction.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        latitude1 = mobjectArrayList.get(position).getCommon_lat();
+                        longitude1 = mobjectArrayList.get(position).getCommon_lng();
+
+
+                        openDirection();
+
+
+                    }
+                });
+
+
+            } else{
+
+                ((MyViewHolder) holder).ll_img_direction.setVisibility(View.GONE);
+            }
+
+
+
+//            For space above title
+            if( (common.getCommon_title() == null)  && ((common.getSubtitle() == null))
+
+                    &&(common.getIs_zoom() != 1) && ((common.getAudio_file() == null))){
+
+                ((MyViewHolder) holder).ll_main_title_music_zoom.setVisibility(View.GONE);
+
+            }else{
+
+                ((MyViewHolder) holder).ll_main_title_music_zoom.setVisibility(View.VISIBLE);
+            }
+
+//            Title
+            if (common.getCommon_title() == null || common.getCommon_title().equals("")) {
+
+                ((MyViewHolder) holder).tv_common_title.setVisibility(View.GONE);
+
+
+            } else {
+
+                ((MyViewHolder) holder).tv_common_title.setVisibility(View.VISIBLE);
+
+//                String kk= "https://www.tutorialspoint.com/java/java_tutorial.pdf";
+
+//                generateImageFromPdf(Uri.parse("http://kmmc.in/wp-content/uploads/2014/01/lesson2.pdf"));
+
+//                try {
+//
+////                    generateImageFromPdf(Uri.parse(kk));
+//
+//                } catch (IOException e) {
+//                    Log.e("dd","catch");
+//                }
+
+                ((MyViewHolder) holder).tv_common_title.setText( textviewHtmlSet.TextviewHtmlSetFrom(common.getCommon_title()));
+                Linkify.addLinks(((MyViewHolder) holder).tv_common_title,Linkify.ALL);
+
+//            try {
+//
+//                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+//
+//                    spanned_title = Html.fromHtml(common.getCommon_title(), Html.FROM_HTML_MODE_LEGACY);
+//
+//                    ((MyViewHolder) holder).tv_common_title.setVisibility(View.VISIBLE);
+//                    ((MyViewHolder) holder).tv_common_title.setText(spanned_title);
+//                } else {
+//
+//                    spanned_title = Html.fromHtml(common.getCommon_title());
+//                    ((MyViewHolder) holder).tv_common_title.setVisibility(View.VISIBLE);
+//                    ((MyViewHolder) holder).tv_common_title.setText(spanned_title);
+//                }
+//
+//            }catch (Exception e){
+//
+//                Log.e("check excp in subtitle",""+e.getMessage());
+//
+//            }
+//
+//            ((MyViewHolder) holder).tv_common_title.setText(common.getCommon_title());
+//
+
+
+
+
+
+            }
+
+//            Subtitle
+
+            if (common.getSubtitle() == null || common.getSubtitle().equals("")) {
+
+                ((MyViewHolder) holder).tv_common_sub_title.setVisibility(View.GONE);
+
+            } else {
+
+                ((MyViewHolder) holder).tv_common_sub_title.setVisibility(View.VISIBLE);
+
+                ((MyViewHolder) holder).tv_common_sub_title.setText( textviewHtmlSet.TextviewHtmlSetFrom(common.getSubtitle()));
+                Linkify.addLinks(((MyViewHolder) holder).tv_common_sub_title,Linkify.ALL);
+
+//                try {
+//
+//                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+//
+//                        subtitle = Html.fromHtml(common.getSubtitle(), Html.FROM_HTML_MODE_LEGACY);
+//
+//                        ((MyViewHolder) holder).tv_common_sub_title.setVisibility(View.VISIBLE);
+//                        ((MyViewHolder) holder).tv_common_sub_title.setText(subtitle);
+//                    } else {
+//
+//                        subtitle = Html.fromHtml(common.getSubtitle());
+//                        ((MyViewHolder) holder).tv_common_sub_title.setVisibility(View.VISIBLE);
+//                        ((MyViewHolder) holder).tv_common_sub_title.setText(subtitle);
+//                    }
+//
+//                }catch (Exception e){
+//
+//                    Log.e("check excp in subtitle",""+e.getMessage());
+//
+//                }
+
+
+            }
+
+
+            // for offer code
+
+            if ( common.getOffer_code() !=null ) {
+
+                ((MyViewHolder) holder).tv_common_offercode.setVisibility(View.VISIBLE);
+
+                ((MyViewHolder) holder).tv_common_offercode.setText("Offer Code"+" : "+ common.getOffer_code());
+                Linkify.addLinks(((MyViewHolder) holder).tv_common_offercode,Linkify.ALL);
+
+
+            } else{
+
+                ((MyViewHolder) holder).tv_common_offercode.setVisibility(View.GONE);
+
+            }
+
+
+
+//            Common description
+            if (common.getCommon_description() == null || common.getCommon_description().equals("")) {
+
+                ((MyViewHolder) holder).tv_common_desc.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_music_font_increase_decrease.setVisibility(View.GONE);
+                ((MyViewHolder) holder).img_common_font_increase.setVisibility(View.GONE);
+                ((MyViewHolder) holder).img_common_font_decrase.setVisibility(View.GONE);
+
+
+            } else {
+
+                ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+
+
+//                ((MyViewHolder) holder).tv_common_desc.setOnLongClickListener(new View.OnLongClickListener() {
+//
+//                    @Override
+//                    public boolean onLongClick(View v) {
+//
+//                        Log.e("check","long pressed");
+//
+//                        setClipboard(context,mobjectArrayList.get(position).getCommon_description());
+//
+//                        Toast.makeText(context, "Copied to clipboard",
+//                                Toast.LENGTH_SHORT).show();
+//
+//                        // TODO Auto-generated method stub
+//                        return true;
+//                    }
+//                });
+
+
+
+                // for highlight of description common.getIs_highlight() == 1 &&
+
+                if( common.getIs_play() == 1 && common.getIs_pause() == 0  ) {
+
+//                    timings_count = timings_count >= 4 ? timings_count - 4 : 0;
+
+//                    String desc =  getHighlightedText(mobjectArrayList.get(position).getCommon_description(), position);
+                    String desc =  mobjectArrayList.get(position).getCommon_description();
+
+//                    timings_count = timings_count + 4;
+
+                    try {
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                            if (desc != null) {
+                                description = Html.fromHtml(desc, Html.FROM_HTML_MODE_LEGACY);
+//                                ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                ((MyViewHolder) holder).tv_common_desc.setText(description);
+
+
+                            }
+
+                        } else {
+
+                            if (desc != null) {
+                                description = Html.fromHtml(desc);
+//                                ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                ((MyViewHolder) holder).tv_common_desc.setText(description);
+                            }
+                        }
+
+                    }catch (Exception e){
+
+                        Log.e("excp desc",""+e.getMessage());
+                    }
+
+
+                } else {
+
+                    ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+
+                    try {
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                            description = Html.fromHtml(mobjectArrayList.get(position).getCommon_description(), Html.FROM_HTML_MODE_LEGACY);
+
+                            ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                        } else {
+
+                            description = Html.fromHtml(mobjectArrayList.get(position).getCommon_description());
+                            ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                        }
+
+                    }catch (Exception e){
+
+                        Log.e("check excp in desc",""+e.getMessage());
+
+                    }
+
+
+//                    ((MyViewHolder) holder).tv_common_desc.setText(mobjectArrayList.get(position).getCommon_description());
+                }
+
+//                Zoom for description
+                if ( common.getIs_zoom() == 1 )
+                {
+                    font_size = common.getZoom();
+
+                    ((MyViewHolder) holder).ll_music_font_increase_decrease.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).tv_common_desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, font_size);
+
+                    ((MyViewHolder) holder).img_common_font_increase.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).img_common_font_decrase.setVisibility(View.VISIBLE);
+
+                    Glide.with(context).load("").error(R.drawable.zoom_in).into(((MyViewHolder) holder).img_common_font_increase);
+
+                    Glide.with(context).load("").error(R.drawable.zoom_out).into(((MyViewHolder) holder).img_common_font_decrase);
+
+                    ((MyViewHolder) holder).img_common_font_increase.setOnClickListener(new View.OnClickListener() {
+
+                        @Override
+                        public void onClick(View v) {
+
+
+                            Log.e("In plus","gerere");
+
+                            V2CommonDbModel c1 = mobjectArrayList.get(position);
+
+                            if ( master_position_desc == position || master_position_desc == -1 ) {
+
+                                font_size = c1.getZoom();
+                                font_size = font_size + 2;
+                                c1.setZoom(font_size);
+
+                                Log.e("checking font1", "" + font_size);
+
+                                // for highlight desc c1.getIs_highlight() == 1 &&
+
+                                if(  c1.getIs_play() == 1  && c1.getIs_pause() == 0 ) {
+
+//                                    timings_count = timings_count >= 4 ? timings_count - 4 : 0;
+//                                    String desc =  getHighlightedText(c1.getCommon_description(), position);
+                                    String desc =  c1.getCommon_description();
+//                                    timings_count = timings_count + 4;
+
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                        description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                    } else {
+
+                                        description = Html.fromHtml(desc);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                    }
+                                } else {
+
+                                    ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+                                    String desc =  c1.getCommon_description();
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                        description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                    } else {
+
+                                        description = Html.fromHtml(desc);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                    }
+
+//                                    ((MyViewHolder) holder).tv_common_desc.setText(c1.getCommon_description());
+                                }
+
+
+                                ((MyViewHolder) holder).tv_common_desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, font_size);
+
+
+                            } else {
+
+                                font_size = c1.getZoom();
+
+                                font_size = font_size + 2;
+
+                                c1.setZoom(font_size);
+
+                                ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+
+                                String desc =  mobjectArrayList.get(position).getCommon_description();
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                    description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                    ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                    Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                } else {
+
+                                    description = Html.fromHtml(desc);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                    ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                    Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                }
+
+//                                ((MyViewHolder) holder).tv_common_desc.setText(mobjectArrayList.get(position).getCommon_description());
+                                ((MyViewHolder) holder).tv_common_desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, font_size);
+
+                            }
+
+                            master_position_desc = position;
+                        }
+                    });
+
+
+                    ((MyViewHolder) holder).img_common_font_decrase.setOnClickListener(new View.OnClickListener() {
+
+                        @Override
+                        public void onClick(View v) {
+
+                            Log.e("check position -",""+position);
+                            V2CommonDbModel c1 = mobjectArrayList.get(position);
+
+                            if (font_size > 5) {
+
+                                if(  master_position_desc == position || master_position_desc == -1 ) {
+
+                                    font_size = c1.getZoom();
+                                    font_size = font_size - 2;
+                                    c1.setZoom(font_size);
+
+                                    Log.e("checking font2", "" + font_size);
+                                    Log.e("checking font2", "" + timings_count);
+
+                                    // for highlight desc c1.getIs_highlight() == 1 &&
+
+                                    if(  c1.getIs_play() == 1 && c1.getIs_pause() == 0  ) {
+
+//                                        timings_count = timings_count >= 4 ? timings_count - 4 : 0;
+//                                        String desc =  getHighlightedText(c1.getCommon_description(), position);
+                                        String desc =  c1.getCommon_description();
+//                                        timings_count = timings_count + 4;
+
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                            description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+
+                                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+//                                            Linkify.
+
+                                        } else {
+
+                                            description = Html.fromHtml(desc);
+//                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+
+                                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+                                        }
+                                    } else {
+
+                                        ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+                                        String desc =  c1.getCommon_description();
+//                                        timings_count = timings_count + 4;
+
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                            description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+
+                                        } else {
+
+                                            description = Html.fromHtml(desc);
+//                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                            Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+
+                                        }
+
+
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(c1.getCommon_description());
+                                    }
+
+
+                                    ((MyViewHolder) holder).tv_common_desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, font_size);
+
+                                } else {
+
+                                    font_size = c1.getZoom();
+                                    font_size = font_size - 2;
+                                    c1.setZoom(font_size);
+                                    Log.e("checking font2", "" + font_size);
+
+                                    ((MyViewHolder) holder).tv_common_desc.setVisibility(View.VISIBLE);
+
+
+                                    String desc =  mobjectArrayList.get(position).getCommon_description();
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                                        description = Html.fromHtml(desc,Html.FROM_HTML_MODE_LEGACY);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+
+                                    } else {
+
+                                        description = Html.fromHtml(desc);
+//                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+                                        ((MyViewHolder) holder).tv_common_desc.setText(description);
+
+                                        Linkify.addLinks(((MyViewHolder) holder).tv_common_desc,Linkify.ALL);
+
+
+                                    }
+
+//                                    ((MyViewHolder) holder).tv_common_desc.setText(mobjectArrayList.get(position).getCommon_description());
+                                    ((MyViewHolder) holder).tv_common_desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, font_size);
+
+                                }
+                            }
+
+                            master_position_desc = position;
+                        }
+
+                    });
+                } else {
+
+                    ((MyViewHolder) holder).ll_music_font_increase_decrease.setVisibility(View.GONE);
+                    ((MyViewHolder) holder).img_common_font_increase.setVisibility(View.GONE);
+                    ((MyViewHolder) holder).img_common_font_decrase.setVisibility(View.GONE);
+                }
+            }
+
+//            Image
+            if (common.getCommon_image() != null) {
+
+//                ((MyViewHolder) holder).rl_image_with_progressbar.setVisibility(View.VISIBLE);
+//                Log.e("shop image adapter", common.getCommon_image());
+                ((MyViewHolder) holder).img_common_image.setVisibility(View.VISIBLE);
+
+
+                Glide.with(context).
+                        load(Uri.parse(common.getCommon_image()))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .listener(new RequestListener<Uri, GlideDrawable>() {
+                            @Override
+                            public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                ((MyViewHolder) holder).pb_common_progress_bar.setVisibility(View.GONE);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                ((MyViewHolder) holder).pb_common_progress_bar.setVisibility(View.GONE);
+                                return false;
+                            }
+                        })
+                        .into(((MyViewHolder) holder).img_common_image);
+
+                ((MyViewHolder) holder).img_common_image.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+
+                        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.setDataAndType(Uri.parse(mobjectArrayList.get(position).getCommon_image()), "image/*");
+                        context.startActivity(intent);
+
+
+                    }
+                });
+            } else {
+
+//                ((MyViewHolder) holder).rl_image_with_progressbar.setVisibility(View.GONE);
+                ((MyViewHolder) holder).img_common_image.setVisibility(View.GONE);
+                ((MyViewHolder) holder).pb_common_progress_bar.setVisibility(View.GONE);
+
+            }
+
+//            Check show mobile flag
+            if( common.getIs_show_mobile()==1) {
+
+                if ( common.getCommon_mobile() != null ) {
+
+                    ((MyViewHolder) holder).ll_common_mobile1.setVisibility(View.VISIBLE);
+
+                    Glide.with(context).load("").error(R.drawable.phone).into(((MyViewHolder) holder).img_common_mobile1);
+
+                    ((MyViewHolder) holder).tv_common_mobile1.setText(common.getCommon_mobile());
+
+                    ((MyViewHolder) holder).ll_common_mobile1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            Log.e("herere","on click mobile");
+
+                            if (mobjectArrayList.get(position).getCommon_mobile() != null) {
+
+                                call_number_position = position;
+
+                                is_from_mobile=1;
+
+                                try {
+
+                                    DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                    Date my_date1 = new Date();
+                                    String date_string1 = dateFormat1.format(my_date1);
+
+                                    JSONObject jsonobject = new JSONObject();
+                                    jsonobject .put("category_id", "" + mobjectArrayList.get(position).getCommon_category_id());
+                                    jsonobject.put("shop_id", mobjectArrayList.get(position).getCommon_provider_id());
+                                    jsonobject.put("shop_name", mobjectArrayList.get(position).getCommon_title());
+                                    jsonobject.put("shop_mobile", mobjectArrayList.get(position).getCommon_mobile());
+                                    jsonobject.put("user_mobile",user_mobile_number );
+                                    jsonobject.put("date", date_string1);
+
+                                    String string_object = jsonobject.toString();
+
+                                    Log.e("check that",""+string_object);
+
+                                    AsyncTask my_task = new AsyncTask(
+                                            context,
+                                            MethodType.POST,
+                                            UrlEndPoints.CREATE_CALL_TO_SHOP,
+                                            string_object,
+                                            my_object,
+                                            MethodSelection.CREATE_CALL_TO_SHOP
+                                    );
+
+                                    my_task.setIs_loader(false);
+
+                                    my_task.execute();
+
+                                } catch (Exception e){
+
+                                    Log.e("excp v2 common adap",""+e.getMessage());
+                                }
+
+
+
+                            }
+                        }
+                    });
+
+
+
+                } else {
+
+                    ((MyViewHolder) holder).ll_common_mobile1.setVisibility(View.GONE);
+                }
+
+//                Alternate Mobile
+                if ( common.getCommon_alternate_mobile() != null ) {
+
+                    Log.e("herere22","on click mobile22");
+
+                    ((MyViewHolder) holder).ll_common_mobile2.setVisibility(View.VISIBLE);
+
+                    Glide.with(context).load("").error(R.drawable.phone).into(((MyViewHolder) holder).img_common_mobile2);
+
+                    ((MyViewHolder) holder).tv_common_mobile2.setText(common.getCommon_alternate_mobile());
+
+                    ((MyViewHolder) holder).ll_common_mobile2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            Log.e("herere","on click mobile");
+
+                            if (mobjectArrayList.get(position).getCommon_alternate_mobile() != null) {
+
+                                call_number_position = position;
+
+                                try {
+
+                                    DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                    Date my_date1 = new Date();
+                                    String date_string1 = dateFormat1.format(my_date1);
+
+                                    JSONObject jsonobject = new JSONObject();
+                                    jsonobject .put("category_id", "" + mobjectArrayList.get(position).getCommon_category_id());
+                                    jsonobject.put("shop_id", mobjectArrayList.get(position).getCommon_provider_id());
+                                    jsonobject.put("shop_name", mobjectArrayList.get(position).getCommon_title());
+                                    jsonobject.put("shop_mobile", mobjectArrayList.get(position).getCommon_alternate_mobile());
+                                    jsonobject.put("user_mobile",user_mobile_number );
+                                    jsonobject.put("date", date_string1);
+
+                                    String string_object = jsonobject.toString();
+
+                                    Log.e("check that",""+string_object);
+
+                                    AsyncTask my_task = new AsyncTask(
+                                            context,
+                                            MethodType.POST,
+                                            UrlEndPoints.CREATE_CALL_TO_SHOP,
+                                            string_object,
+                                            my_object,
+                                            MethodSelection.CREATE_CALL_TO_SHOP
+                                    );
+
+                                    my_task.setIs_loader(false);
+
+                                    my_task.execute();
+
+                                } catch (Exception e){
+
+                                    Log.e("excp v2 common adap",""+e.getMessage());
+                                }
+
+
+
+                            }
+                        }
+                    });
+
+
+
+
+
+
+                } else {
+
+                    ((MyViewHolder) holder).ll_common_mobile2.setVisibility(View.GONE);
+                }
+
+            } else {
+
+                ((MyViewHolder) holder).ll_common_mobile1.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_mobile2.setVisibility(View.GONE);
+            }
+
+//            Email
+            if (common.getCommon_email() != null ) {
+
+                ((MyViewHolder) holder).ll_common_email.setVisibility(View.VISIBLE);
+
+                Glide.with(context).load("").error(R.drawable.gmail).into(((MyViewHolder) holder).img_common_email);
+
+                ((MyViewHolder) holder).tv_common_email.setText(common.getCommon_email());
+
+            } else {
+
+                ((MyViewHolder) holder).ll_common_email.setVisibility(View.GONE);
+            }
+
+//            Check website show flag
+            if( common.getIs_show_website() ==1) {
+
+                if (common.getCommon_website() != null ) {
+
+                    try {
+
+                        Log.e("check", "" + common.getCommon_website());
+
+                        ((MyViewHolder) holder).ll_common_website.setVisibility(View.VISIBLE);
+
+                        Glide.with(context).load("").error(R.drawable.website).into(((MyViewHolder) holder).img_common_website);
+
+                        ((MyViewHolder) holder).tv_common_website.setText(common.getCommon_website());
+
+//                    String url_check = "http://";
+//
+//                    if( mobjectArrayList.get(position).getCommon_website().toLowerCase().contains(url_check.toLowerCase())) {
+//
+//
+//
+//                        ((MyViewHolder) holder).ll_common_website.setOnClickListener(new View.OnClickListener() {
+//                            @Override
+//                            public void onClick(View v) {
+//
+//                                CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+//                                CustomTabsIntent customTabsIntent = builder.build();
+//
+//                                builder.setToolbarColor(context.getResources().getColor(R.color.colorPrimary));
+//                                builder.setStartAnimations(context, android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+//                                builder.setExitAnimations(context, android.R.anim.slide_in_left,
+//                                        android.R.anim.slide_out_right);
+//
+//
+//                                CustomTabActivityHelper.openCustomTab(((V2CommonActivityNew) context), customTabsIntent, Uri.parse(mobjectArrayList.get(position).getCommon_website()),
+//
+//                                        new CustomTabActivityHelper.CustomTabFallback() {
+//                                            @Override
+//                                            public void openUri(Activity activity, Uri uri) {
+//
+//                                                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+//                                                activity.startActivity(intent);
+//                                            }
+//                                        });
+//
+//                            }
+//                        });
+//
+
+
+
+                    }catch (Exception e){
+
+                        Log.e("check excp",""+e.getMessage());
+                    }
+
+
+                } else {
+
+                    ((MyViewHolder) holder).ll_common_website.setVisibility(View.GONE);
+                }
+
+            } else {
+
+                ((MyViewHolder) holder).ll_common_website.setVisibility(View.GONE);
+            }
+
+//            Like
+            try {
+
+                int image_id1 = common.getCommon_id();
+
+                int cursor = raise_ur_voice_db_class.fetch(image_id1);
+
+                if (cursor == 1) {
+
+                    Glide.with(context).load("").error(R.drawable.after_like).into(((MyViewHolder) holder).img_common_likes);
+
+                    Glide.with(context).load("").error(R.drawable.after_like).into(((MyViewHolder) holder).img_common_likes1);
+
+
+                    Glide.with(context).load("").error(R.drawable.after_like).into(((MyViewHolder) holder).img_common_likeLCF);
+
+
+                    Glide.with(context).load("").error(R.drawable.after_like).into(((MyViewHolder) holder).img_common_likeLF);
+
+
+
+                    ((MyViewHolder) holder).img_common_likes.setEnabled(false);
+                    ((MyViewHolder) holder).img_common_likes.setClickable(false);
+
+                    ((MyViewHolder) holder).ll_common_likes1.setClickable(false);
+                    ((MyViewHolder) holder).ll_common_likes1.setEnabled(false);
+
+
+                    ((MyViewHolder) holder).ll_common_likeLCF.setClickable(false);
+                    ((MyViewHolder) holder).ll_common_likeLCF.setEnabled(false);
+
+
+
+                    ((MyViewHolder) holder).ll_common_likeLF.setClickable(false);
+                    ((MyViewHolder) holder).ll_common_likeLF.setEnabled(false);
+                } else {
+
+                    Glide.with(context).load("").error(R.drawable.before_like).into(((MyViewHolder) holder).img_common_likes);
+
+                    Glide.with(context).load("").error(R.drawable.before_like).into(((MyViewHolder) holder).img_common_likes1);
+
+
+                    Glide.with(context).load("").error(R.drawable.before_like).into(((MyViewHolder) holder).img_common_likeLCF);
+
+
+                    Glide.with(context).load("").error(R.drawable.before_like).into(((MyViewHolder) holder).img_common_likeLF);
+
+
+
+                    ((MyViewHolder) holder).img_common_likes.setEnabled(true);
+                    ((MyViewHolder) holder).img_common_likes.setClickable(true);
+
+                    ((MyViewHolder) holder).ll_common_likes1.setClickable(true);
+                    ((MyViewHolder) holder).ll_common_likes1.setEnabled(true);
+
+                    ((MyViewHolder) holder).ll_common_likeLCF.setClickable(true);
+                    ((MyViewHolder) holder).ll_common_likeLCF.setEnabled(true);
+
+
+                    ((MyViewHolder) holder).ll_common_likeLF.setClickable(true);
+                    ((MyViewHolder) holder).ll_common_likeLF.setEnabled(true);
+
+
+
+
+                }
+
+
+            }catch (Exception e){
+
+                Log.e("excepInAdaperCursor", e.getMessage());
+
+            }
+
+
+
+            try {
+
+                int item_id = common.getCommon_id();
+
+                int cursor = favourite_db_class.fetch(item_id);
+
+                if (cursor == 1) {
+
+                    Glide.with(context).load("").error(R.drawable.rate_star_fill).into(((MyViewHolder) holder).img_common_favouriteLCF);
+                    Glide.with(context).load("").error(R.drawable.rate_star_fill).into(((MyViewHolder) holder).img_common_favouriteLF);
+
+
+                    ((MyViewHolder) holder).ll_common_favouriteLCF.setEnabled(false);
+                    ((MyViewHolder) holder).ll_common_favouriteLCF.setClickable(false);
+
+                    ((MyViewHolder) holder).ll_common_favouriteLF.setEnabled(false);
+                    ((MyViewHolder) holder).ll_common_favouriteLF.setClickable(false);
+                } else {
+
+
+                    Glide.with(context).load("").error(R.drawable.rate_star_empty).into(((MyViewHolder) holder).img_common_favouriteLCF);
+
+                    Glide.with(context).load("").error(R.drawable.rate_star_empty).into(((MyViewHolder) holder).img_common_favouriteLF);
+
+
+
+
+                    ((MyViewHolder) holder).ll_common_favouriteLCF.setEnabled(true);
+                    ((MyViewHolder) holder).ll_common_favouriteLCF.setClickable(true);
+
+
+                    ((MyViewHolder) holder).ll_common_favouriteLF.setEnabled(true);
+                    ((MyViewHolder) holder).ll_common_favouriteLF.setClickable(true);
+
+                }
+
+
+            } catch (Exception e) {
+                Log.e(TAG,"bookmark"+e.getMessage());
+            }
+
+
+            if( category.getIs_likeable()==1 && category.getIs_comment() ==1 && category.getIs_bookmarked()==1){
+
+                ((MyViewHolder) holder).ll_common_like_comment_favourite.setVisibility(View.VISIBLE);
+                ((MyViewHolder) holder).ll_common_like_comment_count.setVisibility(View.VISIBLE);
+                ((MyViewHolder) holder).ll_common_main_like_comment_grid.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_likes_without_comment.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_favourite.setVisibility(View.GONE);
+
+                if( common.getCommon_like_count().equals("1") || common.getCommon_like_count().equals("0") ){
+
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Like");
+                }else{
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Likes");
+                }
+
+
+                ((MyViewHolder) holder).tv_like_count.setText(common.getCommon_like_count());
+                ((MyViewHolder) holder).tv_common_likeLCF.setText("Like");
+
+
+                Glide.with(context).load("").error(R.drawable.message).into(((MyViewHolder) holder).img_common_commentLCF);
+
+
+                if( common.getComment_count() ==1 || common.getComment_count()==0 ){
+
+                    ((MyViewHolder) holder).tv_comment_count_text.setText("Comment");
+                }else{
+                    ((MyViewHolder) holder).tv_comment_count_text.setText("Comments");
+                }
+
+
+
+                ((MyViewHolder) holder).tv_comment_count.setText(""+common.getComment_count());
+                ((MyViewHolder) holder).tv_common_commentLCF.setText("Comment");
+
+
+
+//                Glide.with(context).load("").error(R.drawable.rate_star_empty).into(((MyViewHolder) holder).img_common_favouriteLCF);
+
+
+                ((MyViewHolder) holder).tv_common_favouriteLCF.setText("Favourite");
+
+
+
+
+            }else if ( category.getIs_likeable() ==1 && category.getIs_comment() ==1 ) {
+
+                ((MyViewHolder) holder).ll_common_like_comment_count.setVisibility(View.VISIBLE);
+                ((MyViewHolder) holder).ll_common_main_like_comment_grid.setVisibility(View.VISIBLE);
+                ((MyViewHolder) holder).ll_common_likes_without_comment.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_comment_favourite.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_favourite.setVisibility(View.GONE);
+
+
+                if( common.getCommon_like_count().equals("1") || common.getCommon_like_count().equals("0") ){
+
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Like");
+
+                }else{
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Likes");
+                }
+
+
+                ((MyViewHolder) holder).tv_like_count.setText(common.getCommon_like_count());
+                ((MyViewHolder) holder).tv_common_likes1.setText("Like");
+
+
+                Glide.with(context).load("").error(R.drawable.message).into(((MyViewHolder) holder).img_common_comment);
+
+
+
+
+                if( common.getComment_count() ==1 ||  common.getComment_count() ==0){
+
+                    ((MyViewHolder) holder).tv_comment_count_text.setText("Comment");
+                }else{
+                    ((MyViewHolder) holder).tv_comment_count_text.setText("Comments");
+                }
+
+                ((MyViewHolder) holder).tv_comment_count.setText(""+common.getComment_count());
+                ((MyViewHolder) holder).tv_common_comment.setText("Comment");
+
+
+            } else if( category.getIs_likeable() ==1 && category.getIs_bookmarked() ==1 ) {
+
+
+                ((MyViewHolder) holder).ll_common_like_comment_count.setVisibility(View.VISIBLE);
+                ((MyViewHolder) holder).ll_common_main_like_comment_grid.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_likes_without_comment.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_comment_favourite.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_favourite.setVisibility(View.VISIBLE);
+
+
+                if(common.getCommon_like_count().equals("1") || common.getCommon_like_count().equals("0")  ){
+
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Like");
+                }else{
+                    ((MyViewHolder) holder).tv_like_count_text.setText("Likes");
+                }
+
+
+                ((MyViewHolder) holder).tv_like_count.setText(common.getCommon_like_count());
+                ((MyViewHolder) holder).tv_common_likeLF.setText("Like");
+
+
+//                Glide.with(context).load("").error(R.drawable.rate_star_empty).into(((MyViewHolder) holder).img_common_favouriteLF);
+
+
+                ((MyViewHolder) holder).verticle_seperator_like_comment.setVisibility(View.GONE);
+                ((MyViewHolder) holder).tv_comment_count_text.setVisibility(View.GONE);
+                ((MyViewHolder) holder).tv_comment_count.setVisibility(View.GONE);
+                ((MyViewHolder) holder).tv_common_favouriteLF.setText("Favourite");
+
+
+            } else if ( category.getIs_likeable() == 1 ) {
+
+                ((MyViewHolder) holder).ll_common_like_comment_count.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_main_like_comment_grid.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_comment_favourite.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_favourite.setVisibility(View.GONE);
+
+                ((MyViewHolder) holder).ll_common_likes_without_comment.setVisibility(View.VISIBLE);
+
+                if( common.getCommon_like_count().equals("1") || common.getCommon_like_count().equals("0") ){
+
+                    ((MyViewHolder) holder).likes_only_text.setText("Like");
+
+                }else{
+
+                    ((MyViewHolder) holder).likes_only_text.setText("Likes");
+                }
+
+
+                ((MyViewHolder) holder).tv_like_count1.setText(common.getCommon_like_count());
+            }
+
+
+            else {
+
+                ((MyViewHolder) holder).ll_common_likes_without_comment.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_comment_count.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_main_like_comment_grid.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_comment_favourite.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_common_like_favourite.setVisibility(View.GONE);
+            }
+
+            ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.GONE);
+
+
+            ((MyViewHolder) holder).seek_bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int ProgressValue, boolean fromUser) {
+
+                    if (fromUser) {
+
+                        try {
+
+                            final long mMinutes = (ProgressValue / 1000) / 60;//converting into minutes
+                            final int mSeconds = ((ProgressValue / 1000) % 60);//converting into seconds
+
+                            String minutes = "" + mMinutes;
+                            String seconds = "" + mSeconds;
+
+                            if (mMinutes < 10)
+                                minutes = 0 + "" + mMinutes;
+
+                            if (mSeconds < 10)
+                                seconds = 0 + "" + mSeconds;
+
+                            String start_time = minutes + " : " + seconds;
+
+                            ((MyViewHolder) holder).mp_start_time.setText(start_time);
+
+//
+//                            if (position != play_id) {
+//
+//
+//                            } else {
+//
+//                                progress_music.setCancelable(false);
+//                                progress_music.setMessage("Please wait till loading");
+//                                progress_music.setIndeterminate(true);
+//                                progress_music.show();
+//                            }
+
+
+//                            mediaPlayer.seekTo(ProgressValue);//if user drags the seekbar, it gets the position and updates in textView.
+
+
+
+//                            int calculate_per = (100 * ProgressValue) / mediaPlayer.getDuration();
+
+
+//                            Log.e("percent",""+download_persent);
+//                            Log.e("calculate_per",""+calculate_per);
+//
+//                            Log.e("current position",""+mediaPlayer.getCurrentPosition());
+//
+//                            Log.e("seek_bar_percentage",""+seek_bar_percentage);
+//
+//                            seek_bar_percentage = ProgressValue;
+//
+//                            Log.e("duration",""+mediaPlayer.getDuration());
+
+
+//                            if (download_persent >= calculate_per) {
+//
+//                                progress_music.dismiss();
+//
+//
+//                            } else{
+//
+//                                progress_music.setCancelable(true);
+//                                progress_music.setMessage("Please wait till loading");
+//                                progress_music.setIndeterminate(true);
+//                                progress_music.show();
+//
+//
+//                            }
+
+
+
+
+                            Log.e("ProgressValue",""+ProgressValue);
+
+
+
+//                            if (timing_array != null) {
+//
+//                                int seek_time_start;
+//                                int seek_time_end;
+//                                int start_time_start;
+//                                int start_time_end;
+//                                int end_time_start;
+//                                int end_time_end;
+//
+//                                int seek_time;
+//                                int array_start_time;
+//                                int array_end_time;
+//
+//                                seek_time_start = Integer.parseInt(start_time.substring(0, 2));
+//                                seek_time_end = Integer.parseInt(start_time.substring(5, 7));
+//                                seek_time = seek_time_start * 60 + seek_time_end;
+//
+//                                for (int i = 0; i <= (timing_array.length - 4); i += 4) {
+//
+//                                    start_time_start = Integer.parseInt(timing_array[i].substring(0, 2));
+//                                    start_time_end = Integer.parseInt(timing_array[i].substring(5, 7));
+//
+//                                    array_start_time = start_time_start * 60 + start_time_end;
+//
+//                                    end_time_start = Integer.parseInt(timing_array[i + 1].substring(0, 2));
+//                                    end_time_end = Integer.parseInt(timing_array[i + 1].substring(5, 7));
+//
+//                                    array_end_time = end_time_start * 60 + end_time_end;
+//
+//                                    Log.e("seek time","" + array_start_time + " " + seek_time + " " + array_end_time);
+//
+//                                    if (array_start_time <= seek_time && seek_time < array_end_time) {
+//
+//
+//                                        Log.e("seek time","" + array_start_time + " " + seek_time + " " + array_end_time);
+//
+//
+////                                        Check to forward or backward
+//                                        int check_length;
+//
+//                                        if ( i != 0 ) {
+//
+//
+//                                            int pixel_value = mobjectArrayList.get(play_id).getZoom() *  Integer.parseInt(timing_array[(i - 2)]);;
+//                                            DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+//                                            int densityDpi = (int)(metrics.density);
+//                                            recyclerView.smoothScrollBy(0,pixel_value * densityDpi  );
+//                                        }
+//
+//
+//                                        timings_count = i;
+//
+//                                        notifyItemChanged( position , common );
+//
+//
+//                                        timings_count += 4;
+//                                        break;
+//                                    }
+//                                }
+//                            }
+                        }catch (Exception e) {
+                            Log.e("check",""+e.getMessage());
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+
+
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
+//                    seek_bar_percentage = seekBar.getProgress() ;
+//
+//                    Log.e("seek_bar_percentage",""+seek_bar_percentage);
+
+                }
+
+            });
+
+
+            if ( common.getAudio_file() != null ) {
+
+                ((MyViewHolder) holder).img_common_music_play.setVisibility(View.VISIBLE);
+
+//                Playing the song
+                if(  common.getIs_play() == 1 && common.getIs_pause() == 0  ) {
+
+//                    ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.VISIBLE);
+                    Glide.with(context).load("").error(R.drawable.pause).into(((MyViewHolder) holder).img_common_music_play);
+
+//                    ((MyViewHolder) holder).seek_bar.setMax( common.getMax() );
+
+//                    if(  common.getStart_time() != null  ) {
+//
+//                        ((MyViewHolder) holder).mp_start_time.setVisibility(View.VISIBLE);
+//                        ((MyViewHolder) holder).mp_start_time.setText(common.getStart_time());
+//                    }
+//                    else
+//                        ((MyViewHolder) holder).mp_start_time.setVisibility(View.GONE);
+//
+//
+//                    if(  common.getEnd_time() != null  ) {
+//
+//                        ((MyViewHolder) holder).mp_end_time.setVisibility(View.VISIBLE);
+//                        ((MyViewHolder) holder).mp_end_time.setText(common.getEnd_time());
+//                    }else
+//                        ((MyViewHolder) holder).mp_end_time.setVisibility(View.GONE);
+//
+//                    ((MyViewHolder) holder).seek_bar.setProgress(common.getCurrent_position());
+
+                } else if(  common.getIs_play() == 1 && common.getIs_pause() == 1 ) {
+
+//                    ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.VISIBLE);
+
+                    Glide.with(context).load("").error(R.drawable.play).into(((MyViewHolder) holder).img_common_music_play);
+
+//                    ((MyViewHolder) holder).seek_bar.setMax( common.getMax() );
+
+//                    if(  common.getStart_time() != null  )
+//                        ((MyViewHolder) holder).mp_start_time.setText( common.getStart_time() );
+//                    else
+//                        ((MyViewHolder) holder).mp_start_time.setVisibility(View.GONE);
+//
+//
+//                    if(  common.getEnd_time() != null  )
+//
+//                        ((MyViewHolder) holder).mp_end_time.setText( common.getEnd_time() );
+//
+//                    else
+//
+//                        ((MyViewHolder) holder).mp_end_time.setVisibility(View.GONE);
+//                    ((MyViewHolder) holder).seek_bar.setProgress(common.getCurrent_position());
+
+                }  else {
+
+                    ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.GONE);
+
+                    Glide.with(context).load("").error(R.drawable.play).into(((MyViewHolder) holder).img_common_music_play);
+                }
+
+
+                ((MyViewHolder) holder).img_common_music_play.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(final View v) {
+
+                        try {
+
+                            final V2CommonDbModel common = mobjectArrayList.get(position);
+
+                            if (common.getIs_play() == 0 || (play_id != position)) {
+
+
+                                Log.e("check if","if");
+
+                                play_id = position;
+
+
+                                // music widget notif
+                                startService("on click if",1);
+
+
+                                progress_music.setCancelable(true);
+                                progress_music.setMessage("Please wait till loading");
+                                progress_music.setIndeterminate(true);
+                                progress_music.show();
+
+//                                mediaPlayer.reset();
+//                                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//                                mediaPlayer.setDataSource(common.getAudio_file());
+//                                mediaPlayer.prepareAsync();
+
+
+                                mobjectArrayList.get(position).setStart_time("00 : 00");
+                                mobjectArrayList.get(position).setEnd_time("00 : 00");
+                                mobjectArrayList.get(position).setCurrent_position(0);
+
+
+//                                if (   common.getHighlighted_timings() != null) {
+//
+//                                    timings_count = 0;
+//                                    timing_array = mobjectArrayList.get(position).getHighlighted_timings().split(",");
+//
+//                                } else {
+
+                                timings_count = 0;
+                                timing_array =null;
+//                                }
+
+                                master_music_flag = 1;
+
+                                try {
+
+                                    //set other things
+                                    for (int i = 0; i < mobjectArrayList.size(); i++) {
+
+                                        V2CommonDbModel db = mobjectArrayList.get(i);
+
+                                        if (i != position) {
+
+                                            db.setIs_play(0);
+                                            db.setIs_pause(0);
+//                                            startService("in on click !");
+
+                                        } else {
+
+                                            db.setIs_play(1);
+                                            db.setIs_pause(0);
+//                                            startService("in on click");
+
+                                        }
+
+                                        mobjectArrayList.set(i, db);
+                                    }
+
+                                    is_song_paused = 0;
+
+                                    notifyDataSetChanged();
+
+                                } catch (Exception e) {
+
+                                    Log.e("audio excp", e.getMessage());
+                                }
+
+                            } else {
+
+                                if (  common.getIs_pause()  == 0 ) {
+
+                                    master_music_flag = 0;
+//                                    mediaPlayer.pause();
+                                    is_song_paused = 1;
+                                    common.setIs_pause(1);
+                                    // music widget notif
+//                                    startService("show play");
+
+                                    Intent broadcastIntent = new Intent();
+                                    broadcastIntent.setAction(NotificationGannaService.NOTIFY_ACTIVITY_ACTION1);
+                                    broadcastIntent.putExtra("song_playing_condition", "song_playing");
+                                    context.sendBroadcast(broadcastIntent);
+
+                                    notifyDataSetChanged();
+
+
+                                } else {
+
+                                    Log.e("check kara","music");
+//                                    mediaPlayer.start();
+                                    master_music_flag = 1;
+                                    common.setIs_pause(0);
+                                    mobjectArrayList.set(position, common);
+//                                    ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.VISIBLE);
+
+
+
+                                    Intent broadcastIntent = new Intent();
+                                    broadcastIntent.setAction(NotificationGannaService.NOTIFY_ACTIVITY_ACTION1);
+                                    broadcastIntent.putExtra("song_playing_condition", "song_paused");
+                                    context.sendBroadcast(broadcastIntent);
+
+
+                                    notifyDataSetChanged();
+
+                                    // music widget notif
+//                                    startService("show pause");
+                                }
+                            }
+
+                        } catch (Exception e) {
+
+                            Log.e("message",e.getMessage());
+                        }
+                    }
+                });
+
+            } else {
+
+                ((MyViewHolder) holder).ll_seek_bar.setVisibility(View.GONE);
+                ((MyViewHolder) holder).img_common_music_play.setVisibility(View.GONE);
+                ((MyViewHolder) holder).ll_music_play.setVisibility(View.GONE);
+            }
+
+
+
+
+
+            ((MyViewHolder) holder).ll_common_commentLCF.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    try {
+
+//                        For maintaingin the count
+                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                        String count_data_json_string = sharedPref.getString("count_data", "");
+                        JSONObject count_data_json = new JSONObject(count_data_json_string);
+                        count_data_json.put("position",position);
+
+                        SharedPreferences.Editor editor = sharedPref.edit();
+
+                        Log.e("count data",count_data_json.toString());
+
+                        editor.putString("count_data" , count_data_json.toString());
+                        editor.commit();
+
+
+                        V2CommonDbModel temp = mobjectArrayList.get(position);
+
+
+
+                        Intent comment = new Intent(v.getContext(), V2CommentsActivity.class)
+                                .putExtra("details_data", temp);
+
+                        v.getContext().startActivity(comment);
+                    } catch (Exception e) {
+
+
+                        Log.e("exception",e.getMessage());
+                    }
+
+                }
+            });
+
+
+
+
+
+            ((MyViewHolder) holder).ll_common_comment.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    try {
+
+//                        For maintaingin the count
+                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                        String count_data_json_string = sharedPref.getString("count_data", "");
+                        JSONObject count_data_json = new JSONObject(count_data_json_string);
+                        count_data_json.put("position",position);
+
+                        SharedPreferences.Editor editor = sharedPref.edit();
+
+                        Log.e("count data",count_data_json.toString());
+
+                        editor.putString("count_data" , count_data_json.toString());
+                        editor.commit();
+
+
+                        V2CommonDbModel temp = mobjectArrayList.get(position);
+
+
+
+                        Intent comment = new Intent(v.getContext(), V2CommentsActivity.class)
+                                .putExtra("details_data", temp);
+
+                        v.getContext().startActivity(comment);
+                    } catch (Exception e) {
+
+
+                        Log.e("exception",e.getMessage());
+                    }
+
+                }
+            });
+
+
+
+
+            // for item sharable
+
+//            Log.e("check getting tag",""+category.getIs_item_sharable());
+
+            if ( category.getIs_item_sharable() == 1) {
+
+
+                ((MyViewHolder) holder).ll_item_sharable.setVisibility(View.VISIBLE);
+
+//            ((MyViewHolder) holder).tv_item_sharable.setText("Share");
+
+
+//            ((MyViewHolder) holder).tv_item_sharable.setPaintFlags(((MyViewHolder) holder).tv_item_sharable.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+                Glide.with(context).load("").error(R.drawable.ic_screen_share_new).into(((MyViewHolder) holder).v4_img_item_share);
+
+
+
+                ((MyViewHolder) holder).v4_img_item_share.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+
+                        try {
+
+                            JSONObject jsonobject = new JSONObject();
+                            jsonobject.put("category_id",  mobjectArrayList.get(position).getCommon_category_id());
+                            jsonobject.put("item_id",  mobjectArrayList.get(position).getCommon_id());
+                            jsonobject.put("type", 0);
+
+                            String string_object = jsonobject.toString();
+
+                            Log.e("my string object",""+jsonobject);
+
+                            AsyncTask my_task = new AsyncTask(
+                                    context,
+                                    MethodType.POST,
+                                    UrlEndPoints.COMMON_ITEM_SHARABLE_URL,
+                                    string_object,
+                                    my_object,
+                                    MethodSelection.COMMON_ITEM_SHARABLE
+                            );
+
+                            my_task.setIs_loader(false);
+
+                            my_task.execute();
+
+                        } catch (Exception e){
+
+                            Log.e("excp v2 common adap",""+e.getMessage());
+                        }
+
+
+
+
+                    }
+                });
+
+
+
+            } else {
+
+                ((MyViewHolder) holder).ll_item_sharable.setVisibility(View.GONE);
+
+            }
+
+
+
+            // for video
+
+            try {
+
+                if(mobjectArrayList.get(position).getV4_is_video()==1) {
+
+                    if (mobjectArrayList.get(position).getVideo_url() != null) {
+
+                        // for checking
+
+                        ((MyViewHolder) holder).rl_over_youtube_thumbnail.setVisibility(View.VISIBLE);
+
+                        if (mobjectArrayList.get(position).getIs_youtube_thumbnail_visible()==1) {
+
+                            mobjectArrayList.get(position).setIs_youtube_thumbnail_visible(0);
+
+                            ((MyViewHolder) holder).youtube_thumbnail.initialize(Config.YOUTUBE_KEY, new YouTubeThumbnailView.OnInitializedListener() {
+                                @Override
+                                public void onInitializationSuccess(YouTubeThumbnailView youTubeThumbnailView, YouTubeThumbnailLoader youTubeThumbnailLoader) {
+
+
+                                    youTubeThumbnailLoader.setVideo(mobjectArrayList.get(position).getVideo_url());
+
+                                    mobjectArrayList.get(position).setIs_youtube_thumbnail_visible(1);
+
+
+                                }
+
+                                @Override
+                                public void onInitializationFailure(YouTubeThumbnailView youTubeThumbnailView, YouTubeInitializationResult youTubeInitializationResult) {
+
+                                    mobjectArrayList.get(position).setIs_youtube_thumbnail_visible(1);
+
+
+                                }
+                            });
+
+                            Glide.with(context).load("").error(R.drawable.play).into(((MyViewHolder) holder).img_youtube_player);
+
+
+                            ((MyViewHolder) holder).rl_over_youtube_thumbnail.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+
+//                                    if (mediaPlayer != null) {
+//
+//                                        if (mediaPlayer.isPlaying()) {
+//                                            mediaPlayer.pause();
+//                                            is_song_paused = 1;
+//                                            mobjectArrayList.get(play_id).setIs_pause(1);
+//                                            notifyDataSetChanged();
+//
+//                                        } else {
+//
+//                                            mediaPlayer.pause();
+//                                            notifyDataSetChanged();
+//                                        }
+//                                    }
+
+                                    Intent intent2 = new Intent(context, VideoShowActivity.class)
+                                            .putExtra("is_from_tid", "1")
+                                            .putExtra("video_title", "title")
+                                            .putExtra("video_link", mobjectArrayList.get(position).getVideo_url());
+                                    context.startActivity(intent2);
+                                }
+                            });
+
+
+                        }
+
+                    } else {
+
+                        ((MyViewHolder) holder).rl_over_youtube_thumbnail.setVisibility(View.GONE);
+
+                    }
+
+
+                }else{
+
+                    ((MyViewHolder) holder).rl_over_youtube_thumbnail.setVisibility(View.GONE);
+
+                }
+
+            }catch(Exception e){
+
+                Log.e("Excp in utube thumb", "" + e.getMessage());
+            }
+
+
+
+
+            // for pdf
+
+            if(mobjectArrayList.get(position).getV4_is_pdf()==1) {
+
+                ((MyViewHolder) holder).ll_pdf_container.setVisibility(View.VISIBLE);
+
+                if(mobjectArrayList.get(position).getPdf_name() !=null){
+                    ((MyViewHolder) holder).pdf_name.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).pdf_name.setText(mobjectArrayList.get(position).getPdf_name());
+
+                }else{
+
+                    ((MyViewHolder) holder).pdf_name.setVisibility(View.GONE);
+                }
+
+
+                if(mobjectArrayList.get(position).getPdf_image_url() !=null){
+
+                    ((MyViewHolder) holder).img_pdf_preview.setVisibility(View.VISIBLE);
+
+                    Glide.with(context).
+                            load(Uri.parse(common.getPdf_image_url()))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .listener(new RequestListener<Uri, GlideDrawable>() {
+                                @Override
+                                public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                    ((MyViewHolder) holder).pb_common_progress_bar.setVisibility(View.GONE);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                    ((MyViewHolder) holder).pb_common_progress_bar.setVisibility(View.GONE);
+                                    return false;
+                                }
+                            })
+                            .into(((MyViewHolder) holder).img_pdf_preview);
+
+
+
+
+                }else{
+
+                    ((MyViewHolder) holder).img_pdf_preview.setVisibility(View.GONE);
+                }
+
+
+                Glide.with(context).load("").error(R.drawable.pdfk).into(((MyViewHolder) holder).img_pdf);
+
+
+                ((MyViewHolder) holder).ll_pdf_container.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                        CustomTabsIntent customTabsIntent = builder.build();
+                        builder.setToolbarColor(context.getResources().getColor(R.color.colorPrimary));
+
+                        builder.setStartAnimations(context, android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                        builder.setExitAnimations(context, android.R.anim.slide_in_left,
+                                android.R.anim.slide_out_right);
+
+                        customTabsIntent.launchUrl(context, Uri.parse(mobjectArrayList.get(position).getPdf_url()));
+
+
+                    }
+                });
+
+
+            }else{
+
+                ((MyViewHolder) holder).ll_pdf_container.setVisibility(View.GONE);
+
+            }
+
+
+
+            // for add to cart functionality
+
+//            Log.e("check is orser",""+category.getIs_order());
+
+            if ( category.getIs_order() == 1) {
+
+                ((MyViewHolder) holder).ll_item_price.setVisibility(View.VISIBLE);
+
+                if( mobjectArrayList.get(position).getPrice() !=null){
+
+                    ((MyViewHolder) holder).tv_item_price.setVisibility(View.VISIBLE);
+
+                    ((MyViewHolder) holder).tv_item_price.setText("₹"+double_number_format.format(mobjectArrayList.get(position).getPrice()));
+
+                }else{
+
+                    ((MyViewHolder) holder).tv_item_price.setVisibility(View.GONE);
+                }
+
+
+
+                if( mobjectArrayList.get(position).getItem_code() !=null){
+
+                    ((MyViewHolder) holder).tv_item_id.setVisibility(View.VISIBLE);
+
+
+                    ((MyViewHolder) holder).tv_item_id.setText("Item Id: "+mobjectArrayList.get(position).getItem_code());
+
+                }else{
+
+                    ((MyViewHolder) holder).tv_item_id.setVisibility(View.GONE);
+
+                }
+
+
+
+                if( mobjectArrayList.get(position).getMin_order_qty() !=null){
+
+                    ((MyViewHolder) holder).tv_min_order_qty.setVisibility(View.VISIBLE);
+
+
+
+                    if( mobjectArrayList.get(position).getUnit() !=null){
+
+
+                        ((MyViewHolder) holder).tv_min_order_qty.setText("Min order qty: "+double_number_format.format(mobjectArrayList.get(position).getMin_order_qty())+" "+mobjectArrayList.get(position).getUnit());
+
+
+                    }else{
+                        ((MyViewHolder) holder).tv_min_order_qty.setText("Min order qty: "+double_number_format.format(mobjectArrayList.get(position).getMin_order_qty()));
+
+
+                    }
+
+                }else{
+
+                    ((MyViewHolder) holder).tv_min_order_qty.setVisibility(View.GONE);
+
+                }
+
+
+
+//            if( mobjectArrayList.get(position).getUnit() !=null){
+//
+//                ((MyViewHolder) holder).tv_item_unit.setVisibility(View.VISIBLE);
+//
+//
+//                ((MyViewHolder) holder).tv_item_unit.setText("Unit: "+mobjectArrayList.get(position).getUnit());
+//
+//            }else{
+//
+//                ((MyViewHolder) holder).tv_item_unit.setVisibility(View.GONE);
+//
+//            }
+
+
+                if( mobjectArrayList.get(position).getMfg_by() !=null){
+
+                    ((MyViewHolder) holder).tv_mfg_by.setVisibility(View.VISIBLE);
+
+
+                    ((MyViewHolder) holder).tv_mfg_by.setText("Mfg by: "+mobjectArrayList.get(position).getMfg_by());
+
+                }else{
+
+                    ((MyViewHolder) holder).tv_mfg_by.setVisibility(View.GONE);
+
+                }
+
+
+
+                broadcastReciver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(final Context context, Intent intent) {
+
+                        Log.e("cursor value","56");
+
+
+                        try {
+
+
+                            int cursor = add_to_cart_sql_operations.fetch(mobjectArrayList.get(position).getCommon_id());
+
+                            // retrive count from sqllite and set to below function
+//                            ((V2CommonActivityNew)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+                            if(category.getFunction()==1){
+
+                                ((V3CommonActivityWithTab)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+
+                            }else if(category.getFunction()==10){
+
+
+                                ((V2ShopPhotosActivity)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+
+                            }else{
+
+                                ((V2CommonActivityNew)context).setCartCount( add_to_cart_sql_operations.getCount());
+
+                            }
+
+
+//                    Log.e("cursor value",""+cu);
+
+
+                            if (cursor == 1) {
+
+
+
+                                ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+
+
+                                ((MyViewHolder) holder).btn_item_add_to_cart.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+
+                                        Intent intent2 = new Intent(context, V4ShoppingCartActivity.class)
+                                                .putExtra("category_data", category);
+
+                                        context.startActivity(intent2);
+
+
+                                    }
+                                });
+
+                            } else {
+
+                                ((MyViewHolder) holder).btn_item_add_to_cart.setText("Add to cart");
+
+                                ((MyViewHolder) holder).btn_item_add_to_cart.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+
+                                        CallAddToCart(mobjectArrayList, position);
+//                                        ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+
+                                    }
+                                });
+
+                            }
+
+                        }catch (Exception e){
+
+                            Log.e("add to cart excp",""+e.getMessage());
+                        }
+
+
+//                        try {
+//
+//                            add_to_cart_sql_operations = new AddToCartSqlOperations(context);
+//                            add_to_cart_sql_operations.open();
+//
+//
+//                            Cursor cursor = add_to_cart_sql_operations.fetchStatus(intent.getIntExtra("item_id",0));
+//
+//                            if(cursor !=null) {
+//
+////                                Log.e("cursor value",""+cursor);
+//
+//                                int temp_status=5;
+//
+//                                if(cursor.getCount()>0){
+//
+//                                    do {
+//
+//                                        temp_status=cursor.getInt(2);  ;
+//
+//
+//                                    }while (cursor.moveToNext());
+//
+//                                }
+//
+//
+//                                if(temp_status==1 && (mobjectArrayList.get(position).getCommon_id()==intent.getIntExtra("item_id",0))){
+//
+//
+//                                    ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+////
+//
+//
+//                                }else{
+//
+//                                    ((MyViewHolder) holder).btn_item_add_to_cart.setText("Add to cart");
+////
+//
+//                                }
+//
+////                                if (cursor.getString(1).equals("1")) {
+////
+////
+////                                    ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+////
+////
+////                                } else {
+////
+////                                    ((MyViewHolder) holder).btn_item_add_to_cart.setText("Add to cart");
+////
+////
+////                                }
+//
+//                            }
+//
+//
+//
+//                        }catch (Exception e){
+//
+//                            Log.e("add to cart excp",""+e.getMessage());
+//                        }
+
+
+
+
+                    }
+
+
+                };
+
+
+                context.registerReceiver(broadcastReciver, new IntentFilter("deleted_item_from_cart"));
+
+
+
+                try {
+
+                    int cursor = add_to_cart_sql_operations.fetch(mobjectArrayList.get(position).getCommon_id());
+
+
+//                    Log.e("cursor value",""+cu);
+
+
+                    if (cursor == 1) {
+
+
+
+                        ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+
+
+                        ((MyViewHolder) holder).btn_item_add_to_cart.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                Intent intent2 = new Intent(context, V4ShoppingCartActivity.class)
+                                        .putExtra("category_data", category);
+
+                                context.startActivity(intent2);
+
+
+                            }
+                        });
+
+                    } else {
+
+                        ((MyViewHolder) holder).btn_item_add_to_cart.setText("Add to cart");
+
+                        ((MyViewHolder) holder).btn_item_add_to_cart.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                CallAddToCart(mobjectArrayList, position);
+//                                ((MyViewHolder) holder).btn_item_add_to_cart.setText("Go to cart");
+
+                            }
+                        });
+
+                    }
+
+                }catch (Exception e){
+
+                    Log.e("add to cart excp",""+e.getMessage());
+                }
+
+
+
+
+            }else{
+
+                ((MyViewHolder) holder).ll_item_price.setVisibility(View.GONE);
+            }
+
+
+
+
+        } else {
+
+            ((V2CommonNewAdapter.ProgressViewHolder) holder).pBar.setIndeterminate(true);
+        }
+    }
+
+
+    @Override
+    public long getItemId(int i) {
+
+        return i;
+    }
+
+    public void setMoreLoading(boolean isMoreLoading) {
+        //Log.e("AdapterItem","setMoreLoading");
+        this.isMoreLoading = isMoreLoading;
+    }
+
+    @Override
+    public int getItemCount() {
+
+        try {
+            return mobjectArrayList.size();
+        } catch (Exception e) {
+            Log.e("excep", e.getMessage());
+
+        }
+        return 0;
+    }
+
+
+    public void setProgressMore(final boolean isProgress) {
+
+        try {
+
+            if (isProgress) {
+                new Handler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mobjectArrayList.add(null);
+                        notifyItemInserted(mobjectArrayList.size() - 1);
+                    }
+                });
+            } else {
+                if (mobjectArrayList.size() > 0) {
+                    mobjectArrayList.remove(mobjectArrayList.size() - 1);
+                    notifyItemRemoved(mobjectArrayList.size());
+                }
+            }
+        } catch (Exception e) {
+            Log.e("excep", e.getMessage());
+        }
+
+
+    }
+
+    static class ProgressViewHolder extends RecyclerView.ViewHolder
+
+
+    {
+        public ProgressBar pBar;
+
+        public ProgressViewHolder(View v) {
+            super(v);
+            // Log.e("AdapterItem","ProgressViewHolder constructor");
+            pBar = (ProgressBar) v.findViewById(R.id.pBar);
+        }
+    }
+
+
+    public class MyViewHolder extends RecyclerView.ViewHolder {
+
+        public TextView tv_common_title, tv_common_sub_title, tv_common_desc, tv_common_mobile1, tv_common_mobile2,
+
+        tv_common_email, tv_common_website, tv_common_likes, tv_common_view_more, tv_common_book_now
+                ,tv_common_comment,tv_like_count,tv_comment_count,tv_like_count_text,
+                tv_comment_count_text,tv_common_likes1,tv_like_count1,likes_only_text,tv_common_offercode;
+
+        public LinearLayout ll_common_details_main, ll_common_details_second_card, ll_common_mobile1, ll_common_mobile2,
+                ll_common_email, ll_common_website, ll_common_likes, ll_music_font_increase_decrease, ll_view_more_book,
+                ll_music_play,ll_main_title_music_zoom,ll_common_comment
+                ,ll_common_like_comment_count,ll_common_main_like_comment_grid
+                ,ll_common_likes_without_comment,ll_common_likes1,ll_add_as__favourite,ll_title_subtitle;
+
+        public ImageView img_common_image, img_common_mobile1, img_common_mobile2, img_common_email, img_common_website,
+                img_common_likes, img_common_music_play, img_common_font_increase,
+                img_common_font_decrase,img_common_comment,img_common_likes1,img_add_as_favourite;
+
+        public ProgressBar pb_common_progress_bar;
+
+        public RelativeLayout rl_image_with_progressbar;
+
+        // Like comment and favourite
+
+        public LinearLayout ll_common_like_comment_favourite,ll_common_likeLCF,ll_common_commentLCF,ll_common_favouriteLCF;
+
+        public ImageView img_common_likeLCF,img_common_commentLCF,img_common_favouriteLCF;
+
+        public TextView tv_common_likeLCF,tv_common_commentLCF,tv_common_favouriteLCF;
+
+        // Like and Favourite
+
+        public LinearLayout ll_common_like_favourite,ll_common_likeLF,ll_common_favouriteLF;
+
+        public TextView tv_common_likeLF,tv_common_favouriteLF;
+
+        public ImageView img_common_likeLF,img_common_favouriteLF;
+
+        public View verticle_seperator_like_comment;
+
+        public LinearLayout ll_seek_bar;
+
+        public SeekBar seek_bar;
+
+
+        public TextView mp_start_time , mp_end_time;
+
+        // for direction
+        public LinearLayout ll_img_direction;
+
+        public ImageView img_direction;
+
+        public TextView tv_get_direction;
+
+        // for item sharable
+
+        public LinearLayout ll_item_sharable;
+
+//        public TextView tv_item_sharable;
+
+        public ImageView v4_img_item_share;
+
+        // for PDF and video
+
+        public LinearLayout ll_pdf_container,ll_video_container;
+        public ImageView img_pdf,img_youtube_player,img_pdf_preview;
+        public RelativeLayout rl_over_youtube_thumbnail;
+        public YouTubeThumbnailView youtube_thumbnail;
+
+//        PdfDocument pdfView;
+
+        // for item cart functionality
+
+        LinearLayout ll_item_price;
+
+        TextView tv_item_price,tv_item_id,tv_item_unit,tv_min_order_qty,tv_mfg_by,pdf_name;
+
+        Button btn_item_add_to_cart;
+        ImageView img_increase_qty,img_decrease_qty;
+
+
+        public MyViewHolder(final View view) {
+
+            super(view);
+
+
+
+//            identifyLinksEmail(context,view);
+
+            // for video & pdf start
+            ll_pdf_container = (LinearLayout) view.findViewById(R.id.ll_pdf_container);
+            ll_video_container = (LinearLayout) view.findViewById(R.id.ll_video_container);
+            img_pdf = (ImageView)view.findViewById(R.id.img_pdf);
+            img_pdf_preview = (ImageView)view.findViewById(R.id.img_pdf_preview);
+            img_youtube_player = (ImageView)view.findViewById(R.id.img_youtube_player);
+            rl_over_youtube_thumbnail = (RelativeLayout)view.findViewById(R.id.rl_over_youtube_thumbnail);
+            youtube_thumbnail = (YouTubeThumbnailView)view.findViewById(R.id.youtube_thumbnail);
+            pdf_name = (TextView) view.findViewById(R.id.pdf_name);
+            // for video & pdf end
+
+
+
+            ll_common_like_comment_favourite = (LinearLayout) view.findViewById(R.id.ll_common_like_comment_favourite);
+            ll_common_likeLCF = (LinearLayout) view.findViewById(R.id.ll_common_likeLCF);
+            ll_common_commentLCF = (LinearLayout) view.findViewById(R.id.ll_common_commentLCF);
+            ll_common_favouriteLCF = (LinearLayout) view.findViewById(R.id.ll_common_favouriteLCF);
+            ll_common_like_favourite = (LinearLayout) view.findViewById(R.id.ll_common_like_favourite);
+            ll_common_likeLF = (LinearLayout) view.findViewById(R.id.ll_common_likeLF);
+            ll_common_favouriteLF = (LinearLayout) view.findViewById(R.id.ll_common_favouriteLF);
+
+
+            img_common_likeLCF = (ImageView) view.findViewById(R.id.img_common_likeLCF);
+            img_common_commentLCF = (ImageView) view.findViewById(R.id.img_common_commentLCF);
+            img_common_favouriteLCF = (ImageView) view.findViewById(R.id.img_common_favouriteLCF);
+            img_common_likeLF = (ImageView) view.findViewById(R.id.img_common_likeLF);
+            img_common_favouriteLF = (ImageView) view.findViewById(R.id.img_common_favouriteLF);
+
+
+            tv_common_likeLCF = (TextView) view.findViewById(R.id.tv_common_likeLCF);
+            tv_common_commentLCF = (TextView) view.findViewById(R.id.tv_common_commentLCF);
+            tv_common_favouriteLCF = (TextView) view.findViewById(R.id.tv_common_favouriteLCF);
+            tv_common_likeLF = (TextView) view.findViewById(R.id.tv_common_likeLF);
+            tv_common_favouriteLF = (TextView) view.findViewById(R.id.tv_common_favouriteLF);
+
+            verticle_seperator_like_comment=(View)view.findViewById(R.id.verticle_seperator_like_comment);
+
+
+            ll_title_subtitle=(LinearLayout)view.findViewById(R.id.ll_title_subtitle);
+            ll_common_details_main = (LinearLayout) view.findViewById(R.id.ll_common_details_main);
+            ll_common_details_second_card = (LinearLayout) view.findViewById(R.id.ll_common_details_second_card);
+            tv_common_title = (TextView) view.findViewById(R.id.tv_common_title);
+            tv_common_sub_title = (TextView) view.findViewById(R.id.tv_common_sub_title);
+            tv_common_desc = (TextView) view.findViewById(R.id.tv_common_desc);
+            img_common_image = (ImageView) view.findViewById(R.id.img_common_image);
+            pb_common_progress_bar = (ProgressBar) view.findViewById(R.id.pb_common_progress_bar);
+            rl_image_with_progressbar = (RelativeLayout) view.findViewById(R.id.rl_image_with_progressbar);
+            ll_main_title_music_zoom=(LinearLayout)view.findViewById(R.id.ll_main_title_music_zoom);
+
+            ll_common_mobile1 = (LinearLayout) view.findViewById(R.id.ll_common_mobile1);
+            ll_common_mobile2 = (LinearLayout) view.findViewById(R.id.ll_common_mobile2);
+            tv_common_mobile1 = (TextView) view.findViewById(R.id.tv_common_mobile1);
+            tv_common_mobile1.setPaintFlags(tv_common_mobile1.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            tv_common_mobile2 = (TextView) view.findViewById(R.id.tv_common_mobile2);
+            tv_common_mobile2.setPaintFlags(tv_common_mobile2.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            img_common_mobile1 = (ImageView) view.findViewById(R.id.img_common_mobile1);
+            img_common_mobile2 = (ImageView) view.findViewById(R.id.img_common_mobile2);
+
+
+            ll_common_email = (LinearLayout) view.findViewById(R.id.ll_common_email);
+            ll_common_website = (LinearLayout) view.findViewById(R.id.ll_common_website);
+            tv_common_email = (TextView) view.findViewById(R.id.tv_common_email);
+            tv_common_website = (TextView) view.findViewById(R.id.tv_common_website);
+            img_common_email = (ImageView) view.findViewById(R.id.img_common_email);
+            img_common_website = (ImageView) view.findViewById(R.id.img_common_website);
+
+
+            ll_common_likes_without_comment =(LinearLayout) view.findViewById(R.id.ll_common_likes_without_comment);
+
+            ll_common_main_like_comment_grid=(LinearLayout) view.findViewById(R.id.ll_common_main_like_comment_grid);
+
+            ll_common_like_comment_count =(LinearLayout) view.findViewById(R.id.ll_common_like_comment_count);
+
+            ll_common_likes = (LinearLayout) view.findViewById(R.id.ll_common_likes);
+            img_common_likes = (ImageView) view.findViewById(R.id.img_common_likes);
+            tv_common_likes = (TextView) view.findViewById(R.id.tv_common_likes);
+
+            img_common_likes1 = (ImageView) view.findViewById(R.id.img_common_likes1);
+            tv_common_likes1 = (TextView) view.findViewById(R.id.tv_common_likes1);
+            ll_common_likes1=(LinearLayout)view.findViewById(R.id.ll_common_likes1);
+
+
+
+            ll_common_comment = (LinearLayout) view.findViewById(R.id.ll_common_comment);
+            img_common_comment = (ImageView) view.findViewById(R.id.img_common_comment);
+            tv_common_comment = (TextView) view.findViewById(R.id.tv_common_comment);
+
+            tv_like_count=(TextView) view.findViewById(R.id.tv_like_count);
+            tv_comment_count=(TextView) view.findViewById(R.id.tv_comment_count);
+            tv_comment_count_text=(TextView) view.findViewById(R.id.tv_comment_count_text);
+            tv_like_count_text=(TextView) view.findViewById(R.id.tv_like_count_text);
+
+            tv_like_count1=(TextView) view.findViewById(R.id.tv_like_count1);
+
+            likes_only_text=(TextView) view.findViewById(R.id.likes_only_text);
+
+
+            tv_common_offercode =(TextView) view.findViewById(R.id.tv_common_offercode);
+
+            ll_music_font_increase_decrease = (LinearLayout) view.findViewById(R.id.ll_music_font_increase_decrease);
+            img_common_music_play = (ImageView) view.findViewById(R.id.img_common_music_play);
+            img_common_font_increase = (ImageView) view.findViewById(R.id.img_common_font_increase);
+            img_common_font_decrase = (ImageView) view.findViewById(R.id.img_common_font_decrase);
+
+            ll_view_more_book = (LinearLayout) view.findViewById(R.id.ll_view_more_book);
+            tv_common_view_more = (TextView) view.findViewById(R.id.tv_common_view_more);
+//            tv_common_book_now = (TextView) view.findViewById(R.id.tv_common_book_now);
+
+            ll_music_play = (LinearLayout) view.findViewById(R.id.ll_music_play);
+
+
+            ll_seek_bar = (LinearLayout) view.findViewById(R.id.ll_seek_bar);
+            seek_bar = (SeekBar) view.findViewById(R.id.seek_bar);
+            mp_start_time = (TextView) view.findViewById(R.id.mp_start_time);
+            mp_end_time = (TextView) view.findViewById(R.id.mp_end_time);
+
+
+            // for direction
+
+            ll_img_direction = (LinearLayout) view.findViewById(R.id.ll_img_direction);
+
+            img_direction = (ImageView) view.findViewById(R.id.img_direction);
+
+            tv_get_direction = (TextView) view.findViewById(R.id.tv_get_direction);
+
+
+
+            // for item sharable
+
+            ll_item_sharable = (LinearLayout) view.findViewById(R.id.ll_item_sharable);
+//            tv_item_sharable = ( TextView) view.findViewById(R.id.tv_item_sharable);
+            v4_img_item_share = (ImageView) view.findViewById(R.id.v4_img_item_share);
+
+
+
+
+            // for item cart
+
+            ll_item_price = (LinearLayout) view.findViewById(R.id.ll_item_price);
+            tv_item_price = (TextView) view.findViewById(R.id.tv_item_price);
+            tv_item_id = (TextView) view.findViewById(R.id.tv_item_id);
+//        tv_item_unit = (TextView) view.findViewById(R.id.tv_item_unit);
+            tv_min_order_qty = (TextView) view.findViewById(R.id.tv_min_order_qty);
+            btn_item_add_to_cart = (Button) view.findViewById(R.id.btn_item_add_to_cart);
+            tv_mfg_by = (TextView) view.findViewById(R.id.tv_mfg_by);
+
+
+            // for like //
+
+            img_common_likes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+
+                    like_image(1);
+                }
+            });
+
+
+            ll_common_likes1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    like_image(2);
+                }
+            });
+
+            ll_common_likeLF.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    like_image(3);
+                }
+            });
+
+            ll_common_likeLCF.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    like_image(4);
+
+                }
+            });
+
+
+
+
+            ll_common_favouriteLCF.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+
+
+                    String alertMessage1 = "Are you sure to submit ?\n ";
+
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
+                    LayoutInflater inflater;
+                    inflater = LayoutInflater.from(context);
+                    final View dialogView1 = inflater.inflate(R.layout.confirmation_dialog, null);
+                    dialogBuilder.setView(dialogView1);
+                    alertDialog1 = dialogBuilder.create();
+                    alertDialog1.show();
+
+                    final TextView alert_message = (TextView) dialogView1.findViewById(R.id.update_photo_message);
+                    alert_message.setText(alertMessage1);
+                    TextView No = (TextView) dialogView1.findViewById(R.id.dialog_cancel);
+                    TextView Yes = (TextView) dialogView1.findViewById(R.id.dialog_ok);
+
+                    No.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                            alertDialog1.cancel();
+                        }
+                    });
+
+                    Yes.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            try {
+                                if (!InternetConnectionStatus.checkState(context)) {
+
+                                    Intent i = new Intent(context, InternetNotConnected.class);
+                                    context.startActivity(i);
+
+                                } else {
+
+
+                                    int position = getAdapterPosition();
+
+                                    ll_common_favouriteLCF.setEnabled(false);
+                                    ll_common_favouriteLCF.setClickable(false);
+
+                                    img_common_favouriteLCF.setEnabled(false);
+                                    img_common_favouriteLCF.setClickable(false);
+
+                                    Glide.with(context).load("").error(R.drawable.rate_star_fill).into(img_common_favouriteLCF);
+
+
+                                    bookmark_item_id = mobjectArrayList.get(position).getCommon_id();
+
+                                    int category_id_bookmark=mobjectArrayList.get(position).getCommon_category_id();
+
+                                    Log.e("bookmark_item_id", "" + bookmark_item_id);
+
+                                    JSONObject jsonobject = new JSONObject();
+                                    jsonobject.put("details_id", "" + bookmark_item_id);
+
+                                    jsonobject.put("category_id", "" + category_id_bookmark);
+
+                                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                                    String number = sharedPref.getString("mobile", "");
+                                    jsonobject.put("mobile", number);
+
+                                    String string_object = jsonobject.toString();
+
+                                    AsyncTask my_task = new AsyncTask(
+                                            context,
+                                            MethodType.POST,
+                                            UrlEndPoints.BOOKMARK_URL,
+                                            string_object,
+                                            my_object,
+                                            MethodSelection.ADD_BOOKMARK
+                                    );
+
+                                    my_task.setIs_loader(false);
+
+                                    my_task.execute();
+                                }
+                            } catch (Exception e) {
+
+                                Log.e("Exception", e.getMessage());
+                            }
+                        }
+                    });
+                }
+            });
+
+
+
+
+            ll_common_favouriteLF.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    String alertMessage1 = "Are you sure to submit ?\n ";
+
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
+                    LayoutInflater inflater;
+                    inflater = LayoutInflater.from(context);
+                    final View dialogView1 = inflater.inflate(R.layout.confirmation_dialog, null);
+                    dialogBuilder.setView(dialogView1);
+                    alertDialog1 = dialogBuilder.create();
+                    alertDialog1.show();
+
+                    final TextView alert_message = (TextView) dialogView1.findViewById(R.id.update_photo_message);
+                    alert_message.setText(alertMessage1);
+                    TextView No = (TextView) dialogView1.findViewById(R.id.dialog_cancel);
+                    TextView Yes = (TextView) dialogView1.findViewById(R.id.dialog_ok);
+
+                    No.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                            alertDialog1.cancel();
+                        }
+                    });
+
+                    Yes.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            try {
+                                if (!InternetConnectionStatus.checkState(context)) {
+
+                                    Intent i = new Intent(context, InternetNotConnected.class);
+                                    context.startActivity(i);
+
+                                } else {
+
+
+                                    int position = getAdapterPosition();
+
+
+                                    ll_common_favouriteLF.setEnabled(false);
+                                    ll_common_favouriteLF.setClickable(false);
+                                    img_common_favouriteLF.setEnabled(false);
+                                    img_common_favouriteLF.setClickable(false);
+
+                                    Glide.with(context).load("").error(R.drawable.rate_star_fill).into(img_common_favouriteLF);
+
+
+                                    bookmark_item_id = mobjectArrayList.get(position).getCommon_id();
+
+                                    int category_id_bookmark=mobjectArrayList.get(position).getCommon_category_id();
+
+                                    JSONObject jsonobject = new JSONObject();
+                                    jsonobject.put("details_id", "" + bookmark_item_id);
+
+                                    jsonobject.put("category_id", "" + category_id_bookmark);
+
+                                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                                    String number = sharedPref.getString("mobile", "");
+                                    jsonobject.put("mobile", number);
+
+                                    String string_object = jsonobject.toString();
+
+                                    AsyncTask my_task = new AsyncTask(
+                                            context,
+                                            MethodType.POST,
+                                            UrlEndPoints.BOOKMARK_URL,
+                                            string_object,
+                                            my_object,
+                                            MethodSelection.ADD_BOOKMARK
+                                    );
+
+                                    my_task.setIs_loader(false);
+
+                                    my_task.execute();
+
+//                                    favourite_db_class.insert(bookmark_item_id, 1);
+                                }
+
+                            } catch (Exception e) {
+
+                                Log.e("Exception", e.getMessage());
+                            }
+
+
+
+
+                        }
+                    });
+
+
+
+                }
+            });
+
+
+
+        }
+
+
+        public void like_image(int k){
+            try {
+                if (!InternetConnectionStatus.checkState(context)) {
+
+                    Intent i = new Intent(context, InternetNotConnected.class);
+                    context.startActivity(i);
+
+                } else {
+
+
+                    int position = getAdapterPosition();
+                    if(k==1) {
+
+                        img_common_likes.setEnabled(false);
+                        img_common_likes.setClickable(false);
+
+                        Glide.with(context).load("").error(R.drawable.after_like).into(img_common_likes);
+
+                    }else if(k==2){
+
+                        ll_common_likes1.setEnabled(false);
+                        ll_common_likes1.setClickable(false);
+                        Glide.with(context).load("").error(R.drawable.after_like).into(img_common_likes1);
+
+                    }else if( k==3){
+
+                        ll_common_likeLF.setEnabled(false);
+                        ll_common_likeLF.setClickable(false);
+                        Glide.with(context).load("").error(R.drawable.after_like).into(img_common_likeLF);
+
+
+                    }else if(k==4){
+
+                        ll_common_likeLCF.setEnabled(false);
+                        ll_common_likeLCF.setClickable(false);
+                        Glide.with(context).load("").error(R.drawable.after_like).into(img_common_likeLCF);
+
+
+                    }
+
+
+                    Log.e("check count",mobjectArrayList.get(position).getCommon_like_count());
+
+                    int like_count = Integer.parseInt(mobjectArrayList.get(position).getCommon_like_count());
+
+
+                    like_count = like_count + 1;
+
+                    int like_image_id = mobjectArrayList.get(position).getCommon_id();
+
+                    JSONObject jsonobject = new JSONObject();
+                    jsonobject.put("details_id", "" + like_image_id);
+
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                    String number = sharedPref.getString("mobile", "");
+                    jsonobject.put("mobile", number);
+
+                    String string_object = jsonobject.toString();
+
+                    AsyncTask my_task = new AsyncTask(
+                            context,
+                            MethodType.POST,
+                            UrlEndPoints.COMMON_PHOTOS_LIKE_URL,
+                            string_object,
+                            my_object,
+                            MethodSelection.IMAGE_LIKE
+                    );
+
+                    my_task.setIs_loader(false);
+
+                    my_task.execute();
+
+
+                    if(k==1) {
+
+                        int count = Integer.parseInt(mobjectArrayList.get(position).getCommon_like_count());
+                        count = count + 1;
+                        String my_count = "" + count;
+                        tv_like_count1.setText(my_count);
+
+                    } else if(k==2) {
+
+                        int count = Integer.parseInt(mobjectArrayList.get(position).getCommon_like_count());
+                        count = count + 1;
+                        String my_count = "" + count;
+                        tv_like_count.setText(my_count);
+
+                    } else if(k==3){
+
+                        int count = Integer.parseInt(mobjectArrayList.get(position).getCommon_like_count());
+                        count = count + 1;
+                        String my_count = "" + count;
+                        tv_like_count.setText(my_count);
+
+
+                    } else if(k==4){
+
+                        int count = Integer.parseInt(mobjectArrayList.get(position).getCommon_like_count());
+                        count = count + 1;
+                        String my_count = "" + count;
+                        tv_like_count.setText(my_count);
+
+
+                    }
+
+
+                    like_status = "liked";
+                    raise_ur_voice_db_class.insert(like_image_id, 1);
+
+                    mobjectArrayList.get(position).setCommon_like_count(""+like_count);
+                }
+
+            } catch (Exception e) {
+
+                Log.e("Exception", e.getMessage());
+            }
+
+        }
+
+
+
+
+    }
+
+//    private AudioManager.OnAudioFocusChangeListener afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+//
+//        @Override
+//        public void onAudioFocusChange(int focusChange) {
+//            if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+//                mediaPlayer.start();
+//            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+//
+//                mediaPlayer.pause();
+//            }
+//
+//        }
+//
+//
+//    };
+
+
+
+    public void updateCommentCount(String json_data)
+    {
+        try {
+
+            JSONObject my_json = new JSONObject(json_data);
+            int position = my_json.getInt("position");
+            int count = my_json.getInt("count");
+
+            if( position != -1 && count != 0 ) {
+
+                V2CommonDbModel db_model = mobjectArrayList.get(position);
+                db_model.setComment_count(db_model.getComment_count() + my_json.getInt("count"));
+                mobjectArrayList.set(position, db_model);
+                notifyItemChanged(position);
+            }
+
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            my_json.put("position",-1);
+            my_json.put("count",0);
+            editor.putString("count_data" , my_json.toString());
+            editor.commit();
+
+        }catch (Exception e) {
+
+        }
+    }
+
+
+
+//
+//    public void v2getSeekBarStatus(final int position ){
+//
+//        a = new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//
+//                int currentPosition = 0;
+//                int total = 0;
+//
+//                if(  mediaPlayer != null )
+//
+//                    total = mediaPlayer.getDuration();
+//
+//                while (mediaPlayer != null && currentPosition < total) {
+//
+//                    try {
+//
+//                        Thread.sleep(1000);
+//
+//                        if( mediaPlayer != null  )
+//
+//                            currentPosition = mediaPlayer.getCurrentPosition();
+//
+//                        seek_bar_percentage = currentPosition;
+//
+//                        final long mMinutes=(currentPosition/1000)/60;//converting into minutes
+//                        final int mSeconds=((currentPosition/1000)%60);//converting into seconds
+//
+//                        String minutes = "" + mMinutes;
+//                        String seconds = "" + mSeconds;
+//
+//                        if  (  mMinutes < 10 )
+//                            minutes  = 0 + "" + mMinutes;
+//
+//                        if  (  mSeconds < 10 )
+//                            seconds  = 0 + "" + mSeconds;
+//
+//                        String start_time =  minutes + " : " + seconds;
+//
+//                        if( position < mobjectArrayList.size() ) {
+//
+//                            mobjectArrayList.get(position).setStart_time(start_time);
+//
+//                            mobjectArrayList.get(position).setMax(total);
+//                            mobjectArrayList.get(position).setCurrent_position(currentPosition);
+//                        }
+//
+//                        int a =0;
+//
+//                        if( timing_array != null ) {
+//
+//                            if(  timings_count < timing_array.length ) {
+//
+//                                if (timing_array[timings_count].equals(start_time)) {
+//
+//                                    timings_count += 4;
+//                                    a=1;
+//                                }
+//                            }
+//                        }
+//
+//
+//                        if( position < mobjectArrayList.size()  ) {
+//
+////                            NewAsynTask  b = new NewAsynTask(position, mobjectArrayList.get(position),a);
+//
+//                            MyAsyncTask b = new MyAsyncTask(position, mobjectArrayList.get(position),a);
+////
+//                            b.execute();
+//                        }
+//
+//                    } catch (InterruptedException e) {
+//
+//                        Log.e("intrupted","intrupted");
+//                        return;
+//                    } catch (IllegalStateException e) {
+//
+//                        Log.e("illegal","illegal");
+//                    } catch( Exception e ) {
+//
+//                        Log.e("exception","exception");
+//                    }
+//                }
+//            }
+//        });
+//
+//        a.start();
+//    }
+
+
+
+//    public String getHighlightedText( String description ,int position )
+//
+//    {
+//        try {
+//
+//            int i = 0;
+//
+//            String temp = "";
+//            String [] items = description.split("\n");
+//
+//            for (String item : items) {
+//
+//                if( timing_array == null  ) {
+//
+//                    temp = temp + item;
+//
+//                } else {
+//
+//                    if( timings_count + 3 <= timing_array.length ) {
+//
+//                        if (Integer.parseInt(timing_array[timings_count + 2]) == i) {
+//
+//                            temp = temp + "<font color='#EC7063'>" + item;
+//
+//                        } else if (Integer.parseInt(timing_array[timings_count + 3]) == i) {
+//
+//                            temp = temp + item + "</font>";
+//
+//                        } else {
+//
+//                            temp = temp + item;
+//                        }
+//
+//                    } else {
+//
+//                        temp = temp + item;
+//                    }
+//                }
+//
+//                temp = temp + "<br>";
+//                i++;
+//            }
+//
+////            Log.e("temp",temp);
+//
+//            return temp;
+//
+//        } catch (Exception e) {
+//
+//            Log.e("message",e.getMessage());
+//            return null;
+//        }
+//    }
+
+
+
+    public class NewAsynTask {
+
+        int position,a;
+        V2CommonDbModel temp;
+
+
+        NewAsynTask(final int position  , final V2CommonDbModel temp, final int a) {
+
+            this.position = position;
+            this.temp = temp;
+            this.a=a;
+
+            Observable<Void> responseObservable = new Observable<Void>() {
+                @Override
+                protected void subscribeActual(Observer<? super Void> observer) {
+
+                    if( a==1) {
+
+                        try {
+
+                            int check_length = (Integer.parseInt( timing_array[(timings_count -1)]) - Integer.parseInt(timing_array[(timings_count -2)]));
+
+                            int pixel_value =mobjectArrayList.get(play_id).getZoom() * (check_length+2);
+//                            Log.e("check value",""+pixel_value);
+//                            Log.e("check value",""+(Integer.parseInt( timing_array[(timings_count -1)]) - Integer.parseInt(timing_array[(timings_count -2)])));
+
+                            DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+                            int densityDpi = (int)(metrics.density);
+
+//                            Log.e("check dpi",""+densityDpi);
+
+                            recyclerView.smoothScrollBy(0,pixel_value * densityDpi  );
+
+
+
+                        } catch (Exception e){
+
+                            Log.e("check",""+e.getMessage());
+                        }
+
+                    }
+
+                    notifyItemChanged( position , temp );
+                }
+            };
+
+//            responseObservable.subscribeOn(Schedulers.newThread());
+            responseObservable.subscribe();
+
+        }
+
+    }
+
+
+    public class MyAsyncTask extends android.os.AsyncTask<Void, Void , Void> {
+
+        int position,a;
+        V2CommonDbModel temp;
+
+        MyAsyncTask( int position  , V2CommonDbModel temp,int a) {
+
+            this.position = position;
+            this.temp = temp;
+            this.a=a;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            return null;
+        }
+
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if( a==1) {
+
+                try {
+
+                    int check_length = (Integer.parseInt( timing_array[(timings_count -1)]) - Integer.parseInt(timing_array[(timings_count -2)]));
+
+                    int pixel_value =mobjectArrayList.get(play_id).getZoom() * (check_length+2);
+                    Log.e("check value",""+pixel_value);
+                    Log.e("check value",""+(Integer.parseInt( timing_array[(timings_count -1)]) - Integer.parseInt(timing_array[(timings_count -2)])));
+
+                    DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+                    int densityDpi = (int)(metrics.density);
+
+                    Log.e("check dpi",""+densityDpi);
+
+                    recyclerView.smoothScrollBy(0,pixel_value * densityDpi  );
+
+                } catch (Exception e){
+
+                    Log.e("check",""+e.getMessage());
+                }
+
+            }
+            notifyItemChanged( position , temp );
+        }
+    }
+
+
+
+
+
+
+//    private void setClipboard(Context context, String text) {
+//
+//        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+//        android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+//        clipboard.setPrimaryClip(clip);
+//
+//    }
+
+//    public void prefetchContent(View view) {
+//        String url = "http://www.anjithsasindran.in";
+//        if (mClient != null) {
+//            mClient.warmup(0);
+//            CustomTabsSession customTabsSession = getSession();
+//            customTabsSession.mayLaunchUrl(Uri.parse(url), null, null);
+//        }
+//    }
+//
+//    private CustomTabsSession getSession() {
+//        return mClient.newSession(new CustomTabsCallback() {
+//            @Override
+//            public void onNavigationEvent(int navigationEvent, Bundle extras) {
+//                super.onNavigationEvent(navigationEvent, extras);
+//            }
+//        });
+//    }
+
+
+    private static final String SERVICE_ACTION = "android.support.customtabs.action.CustomTabsService";
+    private static final String CHROME_PACKAGE = "com.android.chrome";
+
+    private static boolean isChromeCustomTabsSupported(@NonNull final Context context) {
+        Intent serviceIntent = new Intent(SERVICE_ACTION);
+        serviceIntent.setPackage(CHROME_PACKAGE);
+        List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(serviceIntent, 0);
+        return !(resolveInfos == null || resolveInfos.isEmpty());
+    }
+
+
+
+// for music widget notification
+    // for music widget notification
+
+    public void startService( String song_play_pause,int position_of_song) {
+
+
+        String song_title="null",song_subtitle="null",song_file="null";
+
+        if( song_play_pause.equals("song completed")){
+
+            play_id = play_id -1;
+        }
+
+        if( song_play_pause .equals("check service")) {
+
+            play_id = position_of_song;
+
+        }
+
+        if( mobjectArrayList.get(play_id).getSubtitle() !=null ){
+
+            song_subtitle = mobjectArrayList.get(play_id).getSubtitle();
+        }
+        if( mobjectArrayList.get(play_id).getCommon_title() !=null ){
+
+            song_title = mobjectArrayList.get(play_id).getCommon_title();
+        }
+
+
+        if( mobjectArrayList.get(play_id).getAudio_file() !=null ){
+
+            song_file = mobjectArrayList.get(play_id).getAudio_file();
+
+        }
+
+        if( song_play_pause.equals("player stoped")){
+
+            Intent serviceIntent = new Intent(context, NotificationGannaService.class)
+                    .putExtra("song_title",song_title)
+                    .putExtra("song_subtitle",song_subtitle)
+                    .putExtra("song_play_pause",song_play_pause)
+                    .putExtra("song_file",song_file);
+
+            serviceIntent.setAction(ConstantsMusic.ACTION.STOPFOREGROUND_ACTION);
+
+            context.startService(serviceIntent);
+
+
+        }
+
+
+
+        Intent serviceIntent = new Intent(context, NotificationGannaService.class)
+                .putExtra("song_title",song_title)
+                .putExtra("song_subtitle",song_subtitle)
+                .putExtra("song_play_pause",song_play_pause)
+                .putExtra("song_file",song_file)
+                .putExtra("mediaPlayer_position_send",mediaPlayer_position_send)
+                .putExtra("mediaPlayer_position_of_song",play_id)
+                .putStringArrayListExtra("song_array",category_name_list)
+                .putStringArrayListExtra("song_title_array",song_title_list)
+                ;
+
+        serviceIntent.setAction(ConstantsMusic.ACTION.STARTFOREGROUND_ACTION);
+
+
+
+
+        context.startService(serviceIntent);
+    }
+
+
+    public void openDirection() {
+
+        try {
+
+
+            // create class object
+            gps = new GPSTracker(context);
+
+            Log.e("checking gps",""+gps.canGetLocation());
+
+            // check if GPS enabled
+            if (gps.canGetLocation()) {
+
+
+//                latitude2 = latitude1;
+//
+//                longitude2 = longitude1;
+
+
+                latitude2 = gps.getLatitude();
+
+                longitude2 = gps.getLongitude();
+
+                Log.e("latitude1", "" + latitude1);
+                Log.e("longitude1", "" + longitude1);
+                Log.e("latitude2", "" + latitude2);
+                Log.e("longitude2", "" + longitude2);
+
+                if (latitude1 == null || longitude1 == null || latitude1 ==0.0 || longitude1 == 0.0) {
+
+//                    Toast.makeText(context, "Please is not updated", Toast.LENGTH_LONG).show();
+
+
+                } else {
+
+                    if (latitude2 == null || longitude2 == null || latitude2 == 0.0 || longitude2 == 0.0) {
+
+//                        String uri = "http://maps.google.com/maps?f=d&hl=en&saddr=" + latitude2 + "," + longitude2 + "&daddr=" + latitude1 + "," + longitude1;
+//                        Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri));
+//                        context.startActivity(Intent.createChooser(intent, "Select an application"));
+//
+
+                    } else {
+
+                        String uri = "http://maps.google.com/maps?f=d&hl=en&saddr=" + latitude2 + "," + longitude2 + "&daddr=" + latitude1 + "," + longitude1;
+                        Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri));
+                        context.startActivity(Intent.createChooser(intent, "Select an application"));
+                    }
+
+                }
+
+            } else {
+
+                // can't get location
+                // GPS or Network is not enabled
+                // Ask user to enable GPS/network in settings
+                gps.showSettingsAlert();
+
+            }
+
+        } catch (Exception e) {
+
+            Log.e(TAG, e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+
+    // for generating pdf thumnail
+
+//     public void generateImageFromPdf(Uri pdfUri) throws FileNotFoundException, IOException {
+//
+//
+//        int pageNumber = 0;
+//
+//        PdfiumCore pdfiumCore = new PdfiumCore(context);
+//
+//        try {
+//
+////            Uri path = Uri.parse( context.getResources().getString(R.raw.abc) );
+//
+//
+////            Uri path = Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.myPdfName);
+//
+//            Log.e("fd bmp",""+pdfUri);
+//            //http://www.programcreek.com/java-api-examples/index.php?api=android.os.ParcelFileDescriptor
+////            ParcelFileDescriptor fd = context.getContentResolver().openFileDescriptor(pdfUri, "r");
+////            ParcelFileDescriptor fd = context.getContentResolver().openFileDescriptor(path, "r");
+//
+////            Log.e("fd bmp 22",""+fd);
+//
+//            com.shockwave.pdfium.PdfDocument pdfDocument = pdfiumCore.newDocument(fd);
+//            pdfiumCore.openPage(pdfDocument, pageNumber);
+//            int width = pdfiumCore.getPageWidthPoint(pdfDocument, pageNumber);
+//            int height = pdfiumCore.getPageHeightPoint(pdfDocument, pageNumber);
+//            Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//            pdfiumCore.renderPageBitmap(pdfDocument, bmp, pageNumber, 0, 0, width, height);
+//            Log.e("check bmp",""+bmp);
+//            saveImage(bmp);
+//            pdfiumCore.closeDocument(pdfDocument); // important!
+//
+//
+//
+//        } catch(Exception e) {
+//            //todo with exception
+//
+//            Log.e("checking pdf",""+e.getMessage());
+//        }
+
+
+
+
+//        try {
+//            InputStream input = context.getContentResolver().openInputStream(pdfUri);
+//            BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
+//            onlyBoundsOptions.inJustDecodeBounds = true;
+//            onlyBoundsOptions.inDither=true;//optional
+//            onlyBoundsOptions.inPreferredConfig=Bitmap.Config.ARGB_8888;//optional
+//            BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
+//            input.close();
+//
+//            if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1)) {
+////                return null;
+//
+//                Log.e("error","error");
+//            }
+//
+//            int originalSize = (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth) ? onlyBoundsOptions.outHeight : onlyBoundsOptions.outWidth;
+//
+//            double ratio = (originalSize > 100) ? (originalSize / 100) : 1.0;
+//
+//            BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+//            bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio);
+//            bitmapOptions.inDither = true; //optional
+//            bitmapOptions.inPreferredConfig=Bitmap.Config.ARGB_8888;//
+//            input = context.getContentResolver().openInputStream(Uri.parse("https://www.google.com/search?tbm=isch&source=hp&biw=1286&bih=658&ei=fE1pW5CLIYTevASz9oCACA&q=hello&oq=hello&gs_l=img.3..0l10.3796.4576.0.4855.5.5.0.0.0.0.207.628.0j3j1.4.0....0...1ac.1.64.img..1.4.626....0.QrZrspzesIw#imgrc=AXnrXJ9gozrXfM:"));
+//            Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
+//            input.close();
+//
+
+//
+//        } catch(Exception e) {
+//
+//            Log.e("excp PDF",""+e.getMessage());
+//            //todo with exception
+//        }
+//    }
+
+    public final static String FOLDER = Environment.getExternalStorageDirectory() + "/PDF";
+    private void saveImage(Bitmap bmp) {
+        FileOutputStream out = null;
+        try {
+            File folder = new File(FOLDER);
+            if(!folder.exists())
+                folder.mkdirs();
+            File file = new File(folder, "PDF.png");
+            out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+
+            Log.e("check bitmap",""+bmp);
+
+        } catch (Exception e) {
+            //todo with exception
+        } finally {
+            try {
+                if (out != null)
+                    out.close();
+            } catch (Exception e) {
+                //todo with exception
+            }
+        }
+    }
+
+
+
+
+
+
+    // testing
+
+    private static int getPowerOfTwoForSampleRatio(double ratio){
+        int k = Integer.highestOneBit((int)Math.floor(ratio));
+        if(k==0) return 1;
+        else return k;
+    }
+
+
+    private void CallAddToCart(ArrayList<V2CommonDbModel> mobjectArrayList ,int position_item) {
+
+        try {
+
+            Log.e("check my position",""+position_item);
+
+            add_position_to_cart =position_item;
+
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+            String number = sharedPref.getString("mobile", "");
+
+            JSONObject jsonobject = new JSONObject();
+
+            jsonobject.put("title",  mobjectArrayList.get(position_item).getCommon_title());
+            jsonobject.put("image",  mobjectArrayList.get(position_item).getCommon_image());
+            jsonobject.put("description",  mobjectArrayList.get(position_item).getCommon_description());
+            jsonobject.put("category_id",  mobjectArrayList.get(position_item).getCommon_category_id());
+            jsonobject.put("v2_details_id",  mobjectArrayList.get(position_item).getCommon_id());
+            jsonobject.put("item_code",  mobjectArrayList.get(position_item).getItem_code());
+            jsonobject.put("price",  mobjectArrayList.get(position_item).getPrice());
+            jsonobject.put("unit",  mobjectArrayList.get(position_item).getUnit());
+            jsonobject.put("qty",  mobjectArrayList.get(position_item).getMin_order_qty());
+            jsonobject.put("system_user_id", number);
+            jsonobject.put("mfg_by", mobjectArrayList.get(position_item).getMfg_by());
+            jsonobject.put("provider_id", mobjectArrayList.get(position_item).getCommon_provider_id());
+
+
+            String string_object = jsonobject.toString();
+
+            Log.e("check in add to cart",""+string_object);
+
+            AsyncTask my_task = new AsyncTask(
+                    context,
+                    MethodType.POST,
+                    UrlEndPoints.ADD_ORDER_CREATE,
+                    string_object,
+                    my_object,
+                    MethodSelection.ADD_ORDER_CREATE
+            );
+
+            my_task.setIs_loader(false);
+
+            my_task.execute();
+
+        } catch (Exception e){
+
+            Log.e("excp v2 common adap",""+e.getMessage());
+        }
+
+
+
+
+    }
+
+
+//    private void identifyLinksEmail(final Context mcontext, final View v) {
+//        try {
+//            if (v instanceof ViewGroup) {
+//                ViewGroup vg = (ViewGroup) v;
+//                for (int i = 0; i < vg.getChildCount(); i++) {
+//                    View child = vg.getChildAt(i);
+//                    identifyLinksEmail(mcontext, child);
+//                }
+//            } else if (v instanceof TextView ) {
+////                ((TextView) v).setTypeface(Typeface.createFromAsset(context.getAssets(), "fonts/Montserrat-SemiBold.otf"));
+////                ((TextView) v).setTypeface(Typeface.createFromAsset(context.getAssets(), "fonts/font_m.otf"));
+//
+//                Linkify.addLinks( ((TextView) v),Linkify.ALL);
+//
+////                ((TextView) v)
+//
+//            }
+//        } catch (Exception e) {
+//
+//            Log.e("identifyLinksEmail excp",""+e.getMessage());
+//        }
+//    }
+
+
+}
+
+
